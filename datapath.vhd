@@ -1,0 +1,349 @@
+-- Not Morteza
+
+LIBRARY ieee;
+USE ieee.std_logic_1164.ALL;
+USE ieee.std_logic_unsigned.ALL;
+USE ieee.std_logic_arith.ALL;
+
+USE IEEE.numeric_std.ALL;
+
+USE work.recop_types.ALL;
+USE work.various_constants.ALL;
+ENTITY datapath IS
+    -- no io?
+END ENTITY datapath;
+ARCHITECTURE behavior OF datapath IS
+
+    COMPONENT ProgramCounter
+        PORT (
+            Rx : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- 16-bit input a
+            RandomBlueLine : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- 16-bit input b
+            Adder_Out : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- 16-bit input b
+            PC_SEL : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
+            PC : OUT STD_LOGIC_VECTOR(15 DOWNTO 0) -- 16-bit input b
+        );
+    END COMPONENT;
+
+    COMPONENT Adder16Bit
+        PORT (
+            a : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+            b : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+            carry_in : IN STD_LOGIC;
+            sum : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+            carry_out : OUT STD_LOGIC
+        );
+    END COMPONENT;
+
+    COMPONENT InstructionModule
+        PORT (
+            IM_Store : IN STD_LOGIC;
+            IM_Load : IN STD_LOGIC;
+            IR_Load : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
+            PC : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- 16-bit input b
+            MysteriousGreenLine : OUT STD_LOGIC;
+            RandomBlueLine : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+            Rx_Set : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+            Rz_Set : OUT STD_LOGIC_VECTOR(15 DOWNTO 0)
+        );
+    END COMPONENT;
+
+    COMPONENT ControlUnit
+        PORT (
+            Address_Select : OUT STD_LOGIC_VECTOR(1 DOWNTO 0); -- Address select for the instruction memory
+            Data_Select : OUT STD_LOGIC_VECTOR(1 DOWNTO 0); -- Data select for the data memory
+            ALU_Select : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
+            Reg_Select : OUT STD_LOGIC_VECTOR(2 DOWNTO 0); -- Register select for the register file
+            PC_Select : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
+            CMP0 : IN STD_LOGIC;
+            MysteriousGreenLine : IN STD_LOGIC; -- Control signal for the instruction memory
+            IM_Store : OUT STD_LOGIC; -- Control signal for the instruction memory
+            IM_Load : OUT STD_LOGIC; -- Control signal for the instruction memory
+            IR_Load : OUT STD_LOGIC; -- Control signal for the instruction memory
+            Register_Store : IN STD_LOGIC; -- Control signal for the register file
+            ALU_OP : OUT STD_LOGIC_VECTOR(2 DOWNTO 0); -- ALU operation code
+            DM_LOAD : OUT STD_LOGIC; -- Control signal for the data memory load
+            DM_STORE : OUT STD_LOGIC -- Control signal for the data memory store
+        );
+    END COMPONENT;
+
+    COMPONENT regfile
+        PORT (
+            clk : IN bit_1;
+            init : IN bit_1;
+            -- control signal to allow data to write into Rz
+            ld_r : IN bit_1;
+            -- Rz and Rx select signals
+            sel_z : IN INTEGER RANGE 0 TO 15;
+            sel_x : IN INTEGER RANGE 0 TO 15;
+            -- register data outputs
+            rx : OUT bit_16;
+            rz : OUT bit_16;
+            -- select signal for input data to be written into Rz
+            rf_input_sel : IN bit_3;
+            -- input data
+            ir_operand : IN bit_16;
+            dm_out : IN bit_16;
+            aluout : IN bit_16;
+            rz_max : IN bit_16;
+            sip_hold : IN bit_16;
+            er_temp : IN bit_1;
+            -- R7 for writing to lower byte of dpcr
+            r7 : OUT bit_16;
+            dprr_res : IN bit_1;
+            dprr_res_reg : IN bit_1;
+            dprr_wren : IN bit_1
+        );
+
+    END COMPONENT;
+
+    COMPONENT comparator
+        PORT (
+            a : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- 16-bit input a
+            b : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- 16-bit input b
+            compare : OUT STD_LOGIC
+        );
+    END COMPONENT;
+
+    COMPONENT ArithmaticLogicUnit
+        PORT (
+            clk : IN bit_1;
+            z_flag : OUT bit_1;
+            -- ALU operation selection
+            alu_operation : IN bit_3;
+            -- operand selection
+            alu_op1_sel : IN bit_2;
+            alu_op2_sel : IN bit_1;
+            alu_carry : IN bit_1; --WARNING: carry in currently is not used
+            alu_result : OUT bit_16 := X"0000";
+            -- operands
+            rx : IN bit_16;
+            rz : IN bit_16;
+            ir_operand : IN bit_16;
+            -- flag control signal
+            clr_z_flag : IN bit_1;
+            reset : IN bit_1;
+            ALU_SELECT : IN bit_2
+        );
+    END COMPONENT;
+
+    COMPONENT DataMemoryModule
+        PORT (
+            Address_SEL : IN STD_LOGIC_VECTOR(1 DOWNTO 0); -- Address selection signal
+            Data_SEL : IN STD_LOGIC_VECTOR(1 DOWNTO 0); -- Data selection signal
+            RandomBlueLine : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- Data input
+            Rz : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- Data input
+            Rx : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- Data input
+            PC : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- Data input
+            DM_LOAD : IN STD_LOGIC; -- Data memory load signal
+            DM_STORE : IN STD_LOGIC; -- Data memory store signal
+            DM_CLK : IN STD_LOGIC; -- Data memory clock signal
+            DM_OUT : OUT STD_LOGIC_VECTOR(15 DOWNTO 0) -- Data memory output
+        );
+
+    END COMPONENT;
+
+    COMPONENT recop_pll
+        PORT (
+            inclk0 : IN STD_LOGIC := '0';
+            c0 : OUT STD_LOGIC
+        );
+    END COMPONENT;
+
+    SIGNAL DEADLINE : STD_LOGIC_VECTOR(15 DOWNTO 0);
+    SIGNAL ADDER_OUTPUT : STD_LOGIC_VECTOR(15 DOWNTO 0);
+    SIGNAL PROGRAM_COUNTER : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
+    SIGNAL PROGRAM_SELECT : STD_LOGIC_VECTOR(1 DOWNTO 0);
+    SIGNAL RZ_LINE : STD_LOGIC_VECTOR(15 DOWNTO 0);
+    SIGNAL RX_LINE : STD_LOGIC_VECTOR(15 DOWNTO 0);
+    SIGNAL COMPARE_OUTPUT : STD_LOGIC;
+    SIGNAL INPUT_CLK : STD_LOGIC;
+    SIGNAL PROCESSOR_CLK : STD_LOGIC;
+    SIGNAL REG_MAX : STD_LOGIC_VECTOR(15 DOWNTO 0) := "1111111111111111";
+    SIGNAL THATONEBLUELINE : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
+    SIGNAL THATONEGREENLINE : STD_LOGIC;
+    SIGNAL DATAM_LOAD : STD_LOGIC;
+    SIGNAL DATAM_STORE : STD_LOGIC;
+    SIGNAL DATAM_OUTPUT : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
+    SIGNAL INSTRUCTION_STORE : STD_LOGIC;
+    SIGNAL INSTRUCTION_LOAD : STD_LOGIC;
+    SIGNAL INSTRUCTION_REG_LOAD : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
+    SIGNAL IR_LOAD : STD_LOGIC;
+    SIGNAL ADDRESS_SELECT : STD_LOGIC_VECTOR(1 DOWNTO 0) := "00";
+    SIGNAL DATA_SELECT : STD_LOGIC_VECTOR(1 DOWNTO 0) := "00";
+    SIGNAL Arithmatic_SELECT : STD_LOGIC_VECTOR(1 DOWNTO 0) := "00";
+    SIGNAL REGISTER_SELECT : STD_LOGIC_VECTOR(2 DOWNTO 0) := "000";
+    SIGNAL STORE_REGISTER : STD_LOGIC;
+    SIGNAL ALU_OUTPUT : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
+    SIGNAL ALU_OP_CODE : STD_LOGIC_VECTOR(2 DOWNTO 0);
+    SIGNAL REGISTER7 : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
+    SIGNAL Environment_Read : STD_LOGIC;
+    SIGNAL Environment_Write : STD_LOGIC;
+    SIGNAL Environment_Clear : STD_LOGIC;
+    SIGNAL EoT : STD_LOGIC;
+    SIGNAL EoT_Write : STD_LOGIC;
+    SIGNAL EoT_Clear : STD_LOGIC;
+    SIGNAL SVOPLINE : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
+    SIGNAL SVOP_WRITE : STD_LOGIC;
+    SIGNAL SIP : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
+    SIGNAL SIP_REG : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
+    SIGNAL SOP_LINE : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
+    SIGNAL SOP_WRITE : STD_LOGIC;
+    SIGNAL dprr_reg : STD_LOGIC_VECTOR(1 DOWNTO 0) := "00";
+    SIGNAL RESULT_WRITE_ENABLE : STD_LOGIC;
+    SIGNAL RESULT : STD_LOGIC;
+    SIGNAL IRQ_WRITE_ENABLE : STD_LOGIC;
+    SIGNAL IRQ_CLEAR_ENABLE : STD_LOGIC;
+    SIGNAL RESET : STD_LOGIC;
+    SIGNAL dpcr_reg : STD_LOGIC_VECTOR(31 DOWNTO 0) := "00000000000000000000000000000000";
+    SIGNAL instruction_register : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
+    SIGNAL dpcr_lsb_sel : STD_LOGIC;
+    SIGNAL dpcr_wr : STD_LOGIC;
+    SIGNAL temporary_environment : STD_LOGIC;
+    SIGNAL dprr_result : STD_LOGIC;
+    SIGNAL dprr_res_reg : STD_LOGIC;
+    SIGNAL dprr_wren : STD_LOGIC;
+    SIGNAL sip_reg_hold : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
+    SIGNAL REGFILE_INIT : STD_LOGIC;
+    SIGNAL LOAD_REG : STD_LOGIC;
+    SIGNAL Rz_integer : INTEGER := 1;
+    SIGNAL Rx_integer : INTEGER := 0; -- Register select for Rz and Rx
+    SIGNAL rf_input_sel : STD_LOGIC_VECTOR(2 DOWNTO 0) := "000"; -- Select signal for input data to be written into Rz
+    SIGNAL INSTRUCTION_REG : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
+    SIGNAL AL_Z_FLAG : STD_LOGIC := '0'; -- ALU zero flag
+    SIGNAL ALU_OP1_SEL : STD_LOGIC_VECTOR(1 DOWNTO 0) := "00"; -- ALU operand selection
+    SIGNAL ALU_OP2_SEL : STD_LOGIC; -- ALU operand selection
+    SIGNAL ALU_CARRY : STD_LOGIC := '0'; -- ALU carry in
+    SIGNAL CLR_Z_FLAG : STD_LOGIC := '0'; -- ALU clear zero flag
+    SIGNAL RESET_ALU : STD_LOGIC := '0'; -- ALU reset signal
+    SIGNAL ALU_RESULT : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000"; -- ALU result
+    SIGNAL ALU_OPERATION : STD_LOGIC_VECTOR(2 DOWNTO 0) := "000"; -- ALU operation selection
+BEGIN
+
+    PC : ProgramCounter
+    PORT MAP(
+        Rx => RX_LINE, -- 16-bit input a
+        RandomBlueLine => THATONEBLUELINE, -- 16-bit input b
+        Adder_Out => ADDER_OUTPUT, -- 16-bit input b
+        PC_SEL => PROGRAM_SELECT,
+        PC => PROGRAM_COUNTER-- 16-bit input b
+    );
+
+    adder : Adder16Bit
+    PORT MAP(
+        a => PROGRAM_COUNTER,
+        b => "0000000000000100", -- 4 in 16-bit
+        carry_in => DEADLINE(1), -- no line?
+        sum => ADDER_OUTPUT,
+        carry_out => DEADLINE(0)
+    );
+
+    IM : InstructionModule
+    PORT MAP(
+        IM_Store => INSTRUCTION_STORE,
+        IM_Load => INSTRUCTION_LOAD,
+        IR_Load => INSTRUCTION_REG_LOAD,
+        PC => PROGRAM_COUNTER,
+        MysteriousGreenLine => THATONEGREENLINE,
+        RandomBlueLine => THATONEBLUELINE,
+        Rx_Set => RX_LINE,
+        Rz_Set => RZ_LINE
+    );
+
+    CU : ControlUnit
+    PORT MAP(
+        Address_Select => ADDRESS_SELECT, -- Address select for the instruction memory
+        Data_Select => DATA_SELECT, -- Data select for the data memory
+        ALU_Select => Arithmatic_SELECT,
+        Reg_Select => REGISTER_SELECT, -- Register select for the register file
+        PC_Select => PROGRAM_SELECT,
+        CMP0 => COMPARE_OUTPUT,
+        MysteriousGreenLine => THATONEGREENLINE, -- Control signal for the instruction memory
+        IM_Store => INSTRUCTION_STORE, -- Control signal for the instruction memory
+        IM_Load => INSTRUCTION_LOAD, -- Control signal for the instruction memory
+        IR_Load => IR_LOAD, -- Control signal for the instruction memory
+        Register_Store => STORE_REGISTER, -- Control signal for the register file
+        ALU_OP => ALU_OPERATION, -- ALU operation code
+        DM_LOAD => DATAM_LOAD, -- Control signal for the data memory load
+        DM_STORE => DATAM_STORE -- Control signal for the data memory store
+    );
+
+    reg : regfile
+    PORT MAP(
+        clk => PROCESSOR_CLK,
+        init => REGFILE_INIT,
+        -- control signal to allow data to write into Rz
+        ld_r => LOAD_REG,
+        -- Rz and Rx select signals
+        sel_z => Rz_integer,
+        sel_x => Rx_integer,
+        -- register data outputs
+        rx => RX_LINE,
+        rz => RZ_LINE,
+        -- select signal for input data to be written into Rz
+        rf_input_sel => REGISTER_SELECT,
+        -- input data
+        ir_operand => INSTRUCTION_REG,
+        dm_out => DATAM_OUTPUT,
+        aluout => ALU_RESULT,
+        rz_max => REG_MAX,
+        sip_hold => sip_reg_hold,
+        er_temp => temporary_environment,
+        -- R7 for writing to lower byte of dpcr
+        r7 => REGISTER7,
+        dprr_res => dprr_result,
+        dprr_res_reg => dprr_res_reg,
+        dprr_wren => dprr_wren
+    );
+
+    COMP : comparator
+    PORT MAP(
+        a => RZ_LINE,
+        b => "0000000000000000",
+        compare => COMPARE_OUTPUT
+    );
+
+    Alu : arithmaticlogicunit
+    PORT MAP(
+        clk => PROCESSOR_CLK,
+        z_flag => AL_Z_FLAG,
+        -- ALU operation selection
+        alu_operation => ALU_OPERATION,
+        -- operand selection
+        alu_op1_sel => ALU_OP1_SEL,
+        alu_op2_sel => ALU_OP2_SEL,
+        alu_carry => ALU_CARRY, --WARNING: carry in currently is not used
+        alu_result => ALU_RESULT,
+        -- operands
+        rx => RX_LINE,
+        rz => RZ_LINE,
+        ir_operand => instruction_register,
+        -- flag control signal
+        clr_z_flag => CLR_Z_FLAG,
+        reset => RESET_ALU,
+        ALU_SELECT => Arithmatic_SELECT
+    );
+
+    DMM : DataMemoryModule
+    PORT MAP(
+        Address_SEL => ADDRESS_SELECT,
+        Data_SEL => DATA_SELECT,
+        RandomBlueLine => THATONEBLUELINE,
+        Rz => RZ_LINE,
+        Rx => RX_LINE,
+        PC => PROGRAM_COUNTER,
+        DM_LOAD => DATAM_LOAD,
+        DM_STORE => DATAM_STORE,
+        DM_CLK => PROCESSOR_CLK,
+        DM_OUT => DATAM_OUTPUT
+    );
+
+    CLOCK : recop_pll
+    PORT MAP
+    (
+        inclk0 => INPUT_CLK,
+        c0 => PROCESSOR_CLK
+    );
+
+    INPUT_CLK <= NOT INPUT_CLK; -- setup a temp clock
+
+END behavior;
