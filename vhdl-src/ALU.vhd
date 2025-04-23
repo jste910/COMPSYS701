@@ -37,13 +37,13 @@ architecture combined of alu is
 	signal result		: bit_16;
 begin
 	--MUX selecting first operand
-	op1_select: process (alu_op1_sel, rx, ir_operand)
+	op1_select: process (alu_op1_sel, rz, rx, ir_operand)
 	begin
 		case alu_op1_sel is
 			when "00" =>
-				operand_1 <= rx;
-			when "01" =>
 				operand_1 <= ir_operand;
+			when "01" =>
+				operand_1 <= rz;
 			when "10" => --not used currently
 				operand_1 <= X"0001";
 			when others =>
