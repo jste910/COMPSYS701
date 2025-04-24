@@ -77,7 +77,7 @@ begin
 			when alu_or =>
 				result <= operand_2 or operand_1;
 			when alu_max =>
-				if (operand_1 > operand 2) then
+				if (operand_1 > operand_2) then
 					result <= operand_1;
 				else
 					result <= operand_2;
