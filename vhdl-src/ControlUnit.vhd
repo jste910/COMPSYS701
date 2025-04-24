@@ -142,6 +142,8 @@ BEGIN
                                     New_Reg_Select <= "011";
                                     New_DM_LOAD <= '1';
                                     New_Address_Select <= "00";
+                                WHEN OTHERS =>
+                                    -- do nothing 
                             END CASE;
 
                         WHEN str =>
@@ -156,6 +158,8 @@ BEGIN
                                 WHEN am_direct =>
                                     New_Address_Select <= "00";
                                     New_Data_Select <= "01";
+                                WHEN OTHERS =>
+                                    -- do nothing     
                             END CASE;
 
                         WHEN jmp =>
@@ -179,12 +183,10 @@ BEGIN
                         WHEN sz =>
                             New_PC_Select <= "01";
                             IF (Z_Flag = '1') THEN
-                                New_PC_Store <= "1";
+                                New_PC_Store <= '1';
                             ELSE
-                                New_PC_Store <= "0";
+                                New_PC_Store <= '0';
                             END IF;
-
-
                         WHEN clfz =>
                             New_CLR_Z_Flag <= '1';
 
@@ -235,6 +237,9 @@ BEGIN
                 WHEN "10" =>
                     -- You can implement more execution/mem stages here if needed
                     FSM_STATE <= "00";
+
+                WHEN OTHERS =>
+                    -- DO nothing need this for 
             END CASE;
         END IF;
     END PROCESS;
