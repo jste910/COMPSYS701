@@ -40,6 +40,7 @@ def assemble_and_patch_mif(asm_file: str, assembler: str = "mrasm.exe", original
     for line in content_lines:
         stripped = line.strip()
 
+# i am quatinp pirme 
         # Keep default fill line ([00..3FF]: FFFF;)
         if stripped.startswith('[') and 'FFFF' in stripped:
             patched_content.append(line)
