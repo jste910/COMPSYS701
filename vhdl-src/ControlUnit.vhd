@@ -52,7 +52,6 @@ ARCHITECTURE behavior OF ControlUnit IS
     SIGNAL New_PC_Store : STD_LOGIC := '0';
     SIGNAL New_IR_Load : STD_LOGIC := '0';
     SIGNAL New_Reg_Store : STD_LOGIC := '0';
-    SIGNAL TEMP_Reg_Store : STD_LOGIC := '0';
     SIGNAL New_ALU_OP : STD_LOGIC_VECTOR(2 DOWNTO 0) := "100";
     SIGNAL New_DM_LOAD : STD_LOGIC := '0';
     SIGNAL New_DM_STORE : STD_LOGIC := '0';
@@ -78,7 +77,7 @@ BEGIN
             New_PC_Store <= '0';
             New_Reg_Store <= '0';
             New_CLR_Z_Flag <= '0';
-            TEMP_Reg_Store <= '0';
+
 
             CASE FSM_STATE IS
                 WHEN "00" =>
@@ -89,7 +88,36 @@ BEGIN
                     FSM_STATE <= "01"; -- Move to decode
 
                 WHEN "01" =>
+                    -- Instruction Decode / Register Access
+
+                    CASE OP_Code IS
+                        WHEN clfz =>
+                            New_CLR_Z_Flag <= '1';
+
+                        WHEN cer =>
+                            NULL;
+
+                        WHEN ceot =>
+                            NULL;
+
+                        WHEN seot =>
+                            NULL;
+
+                        WHEN ler =>
+                            New_Reg_Store <= '1';
+                            New_Reg_Select <= "001";
+
+                        WHEN lsip =>
+                            New_Reg_Store <= '1';
+                            New_Reg_Select <= "010";
+
+                        WHEN noop =>
+                            NULL; 
+                    END CASE;
+
+                WHEN "10" =>
                     -- Instruction Decode
+                    TEMP_Reg_Store <= '0';
                     CASE OP_Code IS
                         WHEN andr =>
                             TEMP_Reg_Store <= '1';
@@ -187,33 +215,11 @@ BEGIN
                             ELSE
                                 New_PC_Store <= '0';
                             END IF;
-                        WHEN clfz =>
-                            New_CLR_Z_Flag <= '1';
-
-                        WHEN cer =>
-                            NULL;
-
-                        WHEN ceot =>
-                            NULL;
-
-                        WHEN seot =>
-                            NULL;
-
-                        WHEN ler =>
-                            New_Reg_Store <= '1';
-                            New_Reg_Select <= "001";
 
                         WHEN ssvop =>
                             NULL;
 
-                        WHEN lsip =>
-                            New_Reg_Store <= '1';
-                            New_Reg_Select <= "010";
-
                         WHEN ssop =>
-                            NULL;
-
-                        WHEN noop =>
                             NULL;
 
                         WHEN max =>
@@ -234,7 +240,7 @@ BEGIN
 
                     FSM_STATE <= "00"; -- Go back to fetch
 
-                WHEN "10" =>
+                WHEN "11" =>
                     -- You can implement more execution/mem stages here if needed
                     FSM_STATE <= "00";
 
