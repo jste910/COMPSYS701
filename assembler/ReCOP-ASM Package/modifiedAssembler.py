@@ -1,7 +1,8 @@
 import subprocess
 import os
+import argparse
 
-def assemble_and_patch_mif(asm_file: str, assembler: str = "mrasm.exe", original_mif: str = "rawOutput.mif", patched_mif: str = "patchedOutput.mif"):
+def assemble_and_patch_mif(asm_file: str, output_mif: str, assembler: str = "mrasm.exe", original_mif: str = "rawOutput.mif"):
     if not os.path.exists(assembler):
         print(f"Assembler not found at: {assembler}")
         return
@@ -61,12 +62,24 @@ def assemble_and_patch_mif(asm_file: str, assembler: str = "mrasm.exe", original
             address += 1
 
     # Step 4: Write to new patched MIF file
-    with open(patched_mif, "w") as f:
+    with open(output_mif, "w") as f:
         f.writelines(header)
         f.writelines(patched_content)
         f.writelines(footer)
 
-    print(f"✅ Patched MIF created: {patched_mif}")
+    print(f"✅ Patched MIF created: {output_mif}")
 
-# Example usage
-assemble_and_patch_mif("test.asm")
+
+def main():
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description="Assemble an ASM file and patch its MIF output.")
+    parser.add_argument("asm_file", help="Path to the input ASM file.")
+    parser.add_argument("output_mif", help="Path to the output MIF file.")
+    args = parser.parse_args()
+
+    # Run the assemble and patch function
+    assemble_and_patch_mif(args.asm_file, args.output_mif)
+
+
+if __name__ == "__main__":
+    main()
