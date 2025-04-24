@@ -40,8 +40,7 @@ def assemble_and_patch_mif(asm_file: str, assembler: str = "mrasm.exe", original
     for line in content_lines:
         stripped = line.strip()
 
-# i am quatinp pirme 
-        # Keep default fill line ([00..3FF]: FFFF;)
+        # Keep the default fill line ([00..3FF]: FFFF;)
         if stripped.startswith('[') and 'FFFF' in stripped:
             patched_content.append(line)
             continue
@@ -52,13 +51,13 @@ def assemble_and_patch_mif(asm_file: str, assembler: str = "mrasm.exe", original
         addr_str, value = stripped.split(':')
         value = value.strip().strip(';')
 
-        # Add the current instruction line
-        patched_content.append(f"\t{format(address, 'X')}\t:{value};\n")
+        # Add the current instruction line with the correct indentation
+        patched_content.append(f"\t\t{format(address, 'X')}\t:{value};\n")
         address += 1
 
-        # Add padding after NOOP
+        # Add padding after NOOP (3400)
         if value.upper() == "3400":
-            patched_content.append(f"\t{format(address, 'X')}\t:0000;\n")
+            patched_content.append(f"\t\t{format(address, 'X')}\t:0000;\n")
             address += 1
 
     # Step 4: Write to new patched MIF file
