@@ -9,7 +9,7 @@ ENTITY DataMemoryModule IS
     PORT (
         Address_SEL : IN STD_LOGIC_VECTOR(1 DOWNTO 0); -- Address selection signal
         Data_SEL : IN STD_LOGIC_VECTOR(1 DOWNTO 0); -- Data selection signal
-        RandomBlueLine : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- Data input
+        Immediate : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- Data input
         Rz : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- Data input
         Rx : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- Data input
         PC : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- Data input
@@ -44,11 +44,11 @@ BEGIN
         q => DM_OUT -- Data output
     );
 
-    PROCESS(Address_SEL, Data_SEL, RandomBlueLine, Rz, Rx, PC)
+    PROCESS(Address_SEL, Data_SEL, Immediate, Rz, Rx, PC)
     BEGIN
         CASE Address_SEL IS
             WHEN "00" => -- Address selection for PC
-                dataLine <= RandomBlueLine;
+                dataLine <= Immediate;
             WHEN "01" => -- Address selection for Rz
                 dataLine <= Rz;
             WHEN "10" => -- Address selection for Rx
@@ -57,8 +57,8 @@ BEGIN
                 dataLine <= (OTHERS => '0'); -- Set to zero or some default value
         END CASE;
         CASE Data_SEL IS
-            WHEN "00" => -- Data selection for RandomBlueLine
-                dataLine <= RandomBlueLine;
+            WHEN "00" => -- Data selection for Immediate
+                dataLine <= Immediate;
             WHEN "01" => -- Data selection for Rx
                 dataLine <= Rx;
             WHEN "10" => -- Data selection for PC

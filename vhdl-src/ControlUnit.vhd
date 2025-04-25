@@ -12,6 +12,7 @@ ENTITY ControlUnit IS
     PORT (
         -- INPUTS
         CLK : IN STD_LOGIC;
+        Reset : IN STD_LOGIC;
         CMP0 : IN STD_LOGIC;
         OP_Code : IN STD_LOGIC_VECTOR(5 DOWNTO 0);
         AM : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
@@ -37,7 +38,7 @@ ENTITY ControlUnit IS
 
         -- OUTPUTS IO / REG CONTROL
         DPCR_Store : OUT STD_LOGIC;
-        CLR_Z_Flag : OUT STD_LOGIC;
+        Z_Clear : OUT STD_LOGIC;
         ER_Clear : OUT STD_LOGIC;
         EOT_Clear : OUT STD_LOGIC;
         EOT_Set : OUT STD_LOGIC;
@@ -49,9 +50,11 @@ END ENTITY ControlUnit;
 ARCHITECTURE behavior OF ControlUnit IS
     SIGNAL FSM_STATE : STD_LOGIC_VECTOR(1 DOWNTO 0) := "00";
 BEGIN
-    PROCESS (CLK)
+    PROCESS (CLK, Reset)
     BEGIN
-        IF rising_edge(CLK) THEN
+        IF Reset THEN
+            FSM_STATE <= "00";
+        ELSIF rising_edge(CLK) THEN
             -- Default values each clock cycle
             Address_Select <= "00";
             Data_Select <= "00";
@@ -71,12 +74,12 @@ BEGIN
             DM_STORE <= '0';
             
             DPCR_Store <= '0';
-            CLR_Z_Flag <= '0';
+            Z_Clear <= '0';
             ER_Clear <= '0';
             EOT_Clear <= '0';
             EOT_Set <= '0';
-            SVOP <= '0';
-            SOP <= '0';
+            SVOP_Set <= '0';
+            SOP_Set <= '0';
 
             CASE FSM_STATE IS
                 WHEN "00" =>
@@ -103,7 +106,7 @@ BEGIN
                     -- Complete Inherent Instructions
                     CASE OP_Code IS
                         WHEN clfz =>
-                            CLR_Z_Flag <= '1';
+                            Z_Clear <= '1';
 
                         WHEN cer =>
                             ER_Clear <= '1';

@@ -16,21 +16,12 @@ ARCHITECTURE behavior OF datapath IS
 
     COMPONENT ProgramCounter
         PORT (
-            Rx : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- 16-bit input a
-            RandomBlueLine : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- 16-bit input b
-            Adder_Out : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- 16-bit input b
-            PC_SEL : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
-            PC : OUT STD_LOGIC_VECTOR(15 DOWNTO 0) -- 16-bit input b
-        );
-    END COMPONENT;
-
-    COMPONENT Adder16Bit
-        PORT (
-            a : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-            b : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-            carry_in : IN STD_LOGIC;
-            sum : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-            carry_out : OUT STD_LOGIC
+            Rx             : IN  STD_LOGIC_VECTOR(15 DOWNTO 0); -- 16-bit input a
+            Immediate      : IN  STD_LOGIC_VECTOR(15 DOWNTO 0); -- 16-bit input b
+            PC_SEL         : IN  STD_LOGIC_VECTOR(1 DOWNTO 0);  -- Selector
+            PC_SET         : IN  STD_LOGIC;                     -- Latch the value
+            CLK            : IN  STD_LOGIC;                     -- Clock signal
+            PC             : OUT STD_LOGIC_VECTOR(15 DOWNTO 0)  -- 16-bit output
         );
     END COMPONENT;
 
@@ -40,8 +31,8 @@ ARCHITECTURE behavior OF datapath IS
             IM_Load : IN STD_LOGIC;
             IR_Load : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
             PC : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- 16-bit input b
-            MysteriousGreenLine : OUT STD_LOGIC;
-            RandomBlueLine : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+            Instruction : OUT STD_LOGIC;
+            Immediate : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
             Rx_Set : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
             Rz_Set : OUT STD_LOGIC_VECTOR(15 DOWNTO 0)
         );
@@ -76,7 +67,7 @@ ARCHITECTURE behavior OF datapath IS
 
             -- OUTPUTS IO / REG CONTROL
             DPCR_Store : OUT STD_LOGIC;
-            CLR_Z_Flag : OUT STD_LOGIC;
+            Z_Clear : OUT STD_LOGIC;
             ER_Clear : OUT STD_LOGIC;
             EOT_Clear : OUT STD_LOGIC;
             EOT_Set : OUT STD_LOGIC;
@@ -149,7 +140,7 @@ ARCHITECTURE behavior OF datapath IS
         PORT (
             Address_SEL : IN STD_LOGIC_VECTOR(1 DOWNTO 0); -- Address selection signal
             Data_SEL : IN STD_LOGIC_VECTOR(1 DOWNTO 0); -- Data selection signal
-            RandomBlueLine : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- Data input
+            Immediate : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- Data input
             Rz : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- Data input
             Rx : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- Data input
             PC : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- Data input
@@ -168,18 +159,30 @@ ARCHITECTURE behavior OF datapath IS
         );
     END COMPONENT;
 
-    SIGNAL DEADLINE : STD_LOGIC_VECTOR(15 DOWNTO 0);
-    SIGNAL ADDER_OUTPUT : STD_LOGIC_VECTOR(15 DOWNTO 0);
-    SIGNAL PROGRAM_COUNTER : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
-    SIGNAL PROGRAM_SELECT : STD_LOGIC_VECTOR(1 DOWNTO 0);
-    SIGNAL RZ_LINE : STD_LOGIC_VECTOR(15 DOWNTO 0);
-    SIGNAL RX_LINE : STD_LOGIC_VECTOR(15 DOWNTO 0);
-    SIGNAL COMPARE_OUTPUT : STD_LOGIC;
+    -- TOP LEVEL CONTROL
     SIGNAL INPUT_CLK : STD_LOGIC;
     SIGNAL PROCESSOR_CLK : STD_LOGIC;
+    SIGNAL RESET : STD_LOGIC;
+    
+    
+    -- DATA SIGNALS
+    SIGNAL PROGRAM_COUNTER : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
+    SIGNAL RZ : STD_LOGIC_VECTOR(15 DOWNTO 0);
+    SIGNAL RX : STD_LOGIC_VECTOR(15 DOWNTO 0);
+    SIGNAL R7 : STD_LOGIC_VECTOR(15 DOWNTO 0);
+    SIGNAL IMMEDIATE : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
+    SIGNAL INSTRUCTION : STD_LOGIC(7 DOWNTO 0);
+    SIGNAL ALU_OUTPUT : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
+
+
+    --
+
+
+    SIGNAL COMPARE_OUTPUT : STD_LOGIC;
+    SIGNAL PROGRAM_SELECT : STD_LOGIC_VECTOR(1 DOWNTO 0);
     SIGNAL REG_MAX : STD_LOGIC_VECTOR(15 DOWNTO 0) := "1111111111111111";
-    SIGNAL THATONEBLUELINE : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
-    SIGNAL THATONEGREENLINE : STD_LOGIC;
+    
+
     SIGNAL DATAM_LOAD : STD_LOGIC;
     SIGNAL DATAM_STORE : STD_LOGIC;
     SIGNAL DATAM_OUTPUT : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
@@ -192,7 +195,7 @@ ARCHITECTURE behavior OF datapath IS
     SIGNAL Arithmatic_SELECT : STD_LOGIC_VECTOR(1 DOWNTO 0) := "00";
     SIGNAL REGISTER_SELECT : STD_LOGIC_VECTOR(2 DOWNTO 0) := "000";
     SIGNAL STORE_REGISTER : STD_LOGIC;
-    SIGNAL ALU_OUTPUT : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
+    
     SIGNAL ALU_OP_CODE : STD_LOGIC_VECTOR(2 DOWNTO 0);
     SIGNAL REGISTER7 : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
     SIGNAL Environment_Read : STD_LOGIC;
@@ -212,7 +215,6 @@ ARCHITECTURE behavior OF datapath IS
     SIGNAL RESULT : STD_LOGIC;
     SIGNAL IRQ_WRITE_ENABLE : STD_LOGIC;
     SIGNAL IRQ_CLEAR_ENABLE : STD_LOGIC;
-    SIGNAL RESET : STD_LOGIC;
     SIGNAL dpcr_reg : STD_LOGIC_VECTOR(31 DOWNTO 0) := "00000000000000000000000000000000";
     SIGNAL instruction_register : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
     SIGNAL dpcr_lsb_sel : STD_LOGIC;
@@ -233,27 +235,18 @@ ARCHITECTURE behavior OF datapath IS
     SIGNAL ALU_OP2_SEL : STD_LOGIC; -- ALU operand selection
     SIGNAL ALU_CARRY : STD_LOGIC := '0'; -- ALU carry in
     SIGNAL CLR_Z_FLAG : STD_LOGIC := '0'; -- ALU clear zero flag
-    SIGNAL RESET_ALU : STD_LOGIC := '0'; -- ALU reset signal
     SIGNAL ALU_RESULT : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000"; -- ALU result
     SIGNAL ALU_OPERATION : STD_LOGIC_VECTOR(2 DOWNTO 0) := "000"; -- ALU operation selection
 BEGIN
 
     PC : ProgramCounter
     PORT MAP(
-        Rx => RX_LINE, -- 16-bit input a
-        RandomBlueLine => THATONEBLUELINE, -- 16-bit input b
-        Adder_Out => ADDER_OUTPUT, -- 16-bit input b
+        Rx => RX 
+        Immediate => IMMEDIATE, 
         PC_SEL => PROGRAM_SELECT,
-        PC => PROGRAM_COUNTER-- 16-bit input b
-    );
-
-    adder : Adder16Bit
-    PORT MAP(
-        a => PROGRAM_COUNTER,
-        b => "0000000000000100", -- 4 in 16-bit
-        carry_in => DEADLINE(1), -- no line?
-        sum => ADDER_OUTPUT,
-        carry_out => DEADLINE(0)
+        PC_SET => PROGRAM_SET,
+        CLK => PROCESSOR_CLK,
+        PC => PROGRAM_COUNTER 
     );
 
     IM : InstructionModule
@@ -262,34 +255,19 @@ BEGIN
         IM_Load => INSTRUCTION_LOAD,
         IR_Load => INSTRUCTION_REG_LOAD,
         PC => PROGRAM_COUNTER,
-        MysteriousGreenLine => THATONEGREENLINE,
-        RandomBlueLine => THATONEBLUELINE,
+        Instruction => INSTRUCTION,
+        Immediate => IMMEDIATE,
         Rx_Set => RX_LINE,
         Rz_Set => RZ_LINE
     );
 
     CU : ControlUnit
     PORT MAP(
-        Address_Select => ADDRESS_SELECT, -- Address select for the instruction memory
-        Data_Select => DATA_SELECT, -- Data select for the data memory
-        ALU_Select => Arithmatic_SELECT,
-        Reg_Select => REGISTER_SELECT, -- Register select for the register file
-        PC_Select => PROGRAM_SELECT,
-        CMP0 => COMPARE_OUTPUT,
-        MysteriousGreenLine => THATONEGREENLINE, -- Control signal for the instruction memory
-        IM_Store => INSTRUCTION_STORE, -- Control signal for the instruction memory
-        IM_Load => INSTRUCTION_LOAD, -- Control signal for the instruction memory
-        IR_Load => IR_LOAD, -- Control signal for the instruction memory
-        Register_Store => STORE_REGISTER, -- Control signal for the register file
-        ALU_OP => ALU_OPERATION, -- ALU operation code
-        DM_LOAD => DATAM_LOAD, -- Control signal for the data memory load
-        DM_STORE => DATAM_STORE -- Control signal for the data memory store
-
         -- INPUTS
-        CLK =>
+        CLK => PROCESSOR_CLK,
         CMP0 => COMPARE_OUTPUT,
-        OP_Code => THATONEGREENLINE(13 DOWNTO 8),
-        AM => THATONEGREENLINE(15 DOWNTO 14),
+        OP_Code => INSTRUCTION(13 DOWNTO 8),
+        AM => INSTRUCTION(15 DOWNTO 14),
         Z_Flag => AL_Z_FLAG,
 
         -- OUTPUTS DATA FLOW
@@ -302,8 +280,8 @@ BEGIN
         DPCR_Select  -- We have two DCPRs atm lol
 
         -- OUTPUTS MIAN CONTROL
-        PC_Store 
-        IM_Store 
+        PC_Store => PC_STORE,
+        IM_Store => IM_STORE,
         IR_Load => IR_LOAD,
         Reg_Store => STORE_REGISTER,
         ALU_OP => ALU_OPERATION,
@@ -311,15 +289,17 @@ BEGIN
         DM_STORE => DATAM_STORE,
         
         -- OUTPUTS IO / REG CONTROL
-        DPCR_Store 
-        CLR_Z_Flag
-        ER_Clear
-        EOT_Clear
-        EOT_Set
-        SVOP
-        SOP
+        DPCR_Store => DPCR_STORE,
+        Z_Clear => Z_CLEAR,
+        ER_Clear => ER_CLEAR,
+        EOT_Clear => EOT_CLEAR,
+        EOT_Set => EOT_SET,
+        SVOP_Set => SVOP_SET,
+        SOP_Set => SOP_SET
     );
 
+
+    
     reg : regfile
     PORT MAP(
         clk => PROCESSOR_CLK,
@@ -380,7 +360,7 @@ BEGIN
     PORT MAP(
         Address_SEL => ADDRESS_SELECT,
         Data_SEL => DATA_SELECT,
-        RandomBlueLine => THATONEBLUELINE,
+        Immediate => IMMEDIATE,
         Rz => RZ_LINE,
         Rx => RX_LINE,
         PC => PROGRAM_COUNTER,
