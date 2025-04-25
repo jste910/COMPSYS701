@@ -26,23 +26,29 @@ ENTITY ControlUnit IS
         PC_Select : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
         DPCR_Select : OUT STD_LOGIC;
 
-        -- OUTPUTS DATA CONTROL
-        DPCR_Store : OUT STD_LOGIC;
+        -- OUTPUTS MIAN CONTROL
         PC_Store : OUT STD_LOGIC;
+        IM_Store : OUT STD_LOGIC;
         IR_Load : OUT STD_LOGIC;
         Reg_Store : OUT STD_LOGIC;
         ALU_OP : OUT STD_LOGIC_VECTOR(2 DOWNTO 0);
         DM_LOAD : OUT STD_LOGIC;
         DM_STORE : OUT STD_LOGIC;
-        CLR_Z_Flag : OUT STD_LOGIC
+
+        -- OUTPUTS IO / REG CONTROL
+        DPCR_Store : OUT STD_LOGIC;
+        CLR_Z_Flag : OUT STD_LOGIC;
+        ER_Clear : OUT STD_LOGIC;
+        EOT_Clear : OUT STD_LOGIC;
+        EOT_Set : OUT STD_LOGIC;
+        SVOP_Set : OUT STD_LOGIC;
+        SOP_Set : OUT STD_LOGIC;
     );
 END ENTITY ControlUnit;
 
 ARCHITECTURE behavior OF ControlUnit IS
     SIGNAL FSM_STATE : STD_LOGIC_VECTOR(1 DOWNTO 0) := "00";
-    SIGNAL TEMP_Reg_Store : STD_LOGIC := '0';
 BEGIN
-
     PROCESS (CLK)
     BEGIN
         IF rising_edge(CLK) THEN
@@ -55,16 +61,22 @@ BEGIN
             PC_Select <= "00";
             DPCR_Select <= '0';
 
+            PC_Store <= '0';
+            IM_Store <= '0';
             IR_Load <= '0';
+            Reg_Store <= '0';
             ALU_OP <= "100";
+            
             DM_LOAD <= '0';
             DM_STORE <= '0';
             
             DPCR_Store <= '0';
-            PC_Store <= '0';
-            Reg_Store <= '0';
             CLR_Z_Flag <= '0';
-
+            ER_Clear <= '0';
+            EOT_Clear <= '0';
+            EOT_Set <= '0';
+            SVOP <= '0';
+            SOP <= '0';
 
             CASE FSM_STATE IS
                 WHEN "00" =>
@@ -74,7 +86,6 @@ BEGIN
                     -- Incriment PC by 2
                     PC_Select <= "00";
                     PC_Store <= '1';
-
                     
                     FSM_STATE <= "01"; -- Move to decode
 
@@ -82,25 +93,25 @@ BEGIN
                     -- Instruction Decode / Register Access
 
                     -- If the Instruction requires an immediate value incriment PC and fetch it
-                    IF (AM = am_immediate) THEN
+                    IF (AM = am_immediate OR AM = am_direct) THEN
                         PC_Select <= "00";
                         PC_Store <= '1';
+                        IM_Store <= '1';
                     END IF;
-
-
-                    -- Complete Simple Instructions
+                    
+                    -- Complete Inherent Instructions
                     CASE OP_Code IS
                         WHEN clfz =>
                             CLR_Z_Flag <= '1';
 
                         WHEN cer =>
-                            NULL;
+                            ER_Clear <= '1';
 
                         WHEN ceot =>
-                            NULL;
+                            EOT_Clear <= '1';
 
                         WHEN seot =>
-                            NULL;
+                            EOT_Set <= '1';
 
                         WHEN ler =>
                             Reg_Store <= '1';
@@ -111,21 +122,27 @@ BEGIN
                             Reg_Select <= "010";
 
                         WHEN noop =>
-                            NULL; 
+                            NULL;
+                        WHEN OTHERS =>
+                            NULL;
                     END CASE;
 
+                    IF (AM = am_inherent) THEN
+                        FSM_STATE <= "00"; -- Inhearent instruction is finished 
+                    ELSE
+                        FSM_STATE <= "10"; -- Go to Execute / Mem
+                    END IF;
+
                 WHEN "10" =>
-                    -- Instruction Decode
+                    -- Execute / Memory access
 
-                    -- Used 
-                    TEMP_Reg_Store <= '0';
-
+                    -- Assume that we wont be doing a writeback 
+                    FSM_STATE <= "00";
 
                     -- BEHOLD THE CASE STATEMENT!
-                    -- THE TOWER OF BABBLE DOESN'T COME CLOSE
                     CASE OP_Code IS
                         WHEN andr =>
-                            TEMP_Reg_Store <= '1';
+                            FSM_STATE <= "11";
                             ALU_OP <= alu_and;
                             IF (AM = am_immediate) THEN
 
@@ -134,7 +151,7 @@ BEGIN
                                 ALU_Select <= "01";
                             END IF;
                         WHEN orr =>
-                            TEMP_Reg_Store <= '1';
+                            FSM_STATE <= "11";
                             ALU_OP <= alu_or;
                             IF (AM = am_immediate) THEN
                                 ALU_Select <= "00";
@@ -143,7 +160,7 @@ BEGIN
                             END IF;
 
                         WHEN addr =>
-                            TEMP_Reg_Store <= '1';
+                            FSM_STATE <= "11";
                             ALU_OP <= alu_add;
                             IF (AM = am_immediate) THEN
                                 ALU_Select <= "00";
@@ -152,7 +169,7 @@ BEGIN
                             END IF;
 
                         WHEN subvr =>
-                            TEMP_Reg_Store <= '1';
+                            FSM_STATE <= "11";
                             ALU_OP <= alu_sub;
                             ALU_Select <= "00";
                             ALU_Select_2 <= '0';
@@ -163,7 +180,7 @@ BEGIN
                             ALU_Select_2 <= '1';
 
                         WHEN ldr =>
-                            TEMP_Reg_Store <= '1';
+                            FSM_STATE <= "11";
                             CASE AM IS
                                 WHEN am_immediate =>
                                     Reg_Select <= "100";
@@ -202,8 +219,9 @@ BEGIN
                             ELSE
                                 PC_Select <= "10";
                             END IF;
+
                         WHEN present =>
-                            NULL;
+                            NULL; -- Wait for comparitor
 
                         WHEN datacall =>
                             DPCR_Store <= '1';
@@ -222,14 +240,14 @@ BEGIN
                             END IF;
 
                         WHEN ssvop =>
-                            NULL;
+                            SVOP_Set <= '1';
 
                         WHEN ssop =>
-                            NULL;
+                            SOP_Set <= '1';
 
                         WHEN max =>
+                            FSM_STATE <= "11";
                             ALU_OP <= alu_max;
-                            Reg_Store <= '1';
                             Reg_Select <= "010";
                             ALU_Select <= "00";
                             ALU_Select_2 <= '1';
@@ -243,10 +261,22 @@ BEGIN
                             NULL;
                     END CASE;
 
-                    FSM_STATE <= "00"; -- Go back to fetch
-
                 WHEN "11" =>
-                    -- You can implement more execution/mem stages here if needed
+                    -- Writeback Stage
+
+                    IF (OP_Code = present) THEN
+                        --  do the Branch is needed
+                        PC_Select <= "01";
+                        IF (CMP0 = '1') THEN
+                            PC_Store <= '1';
+                        ELSE
+                            PC_Store <= '0';
+                        END IF;
+                    ELSE
+                        Reg_Store <= '1';
+                    END IF;
+
+
                     FSM_STATE <= "00";
 
                 WHEN OTHERS =>
