@@ -94,9 +94,10 @@ BEGIN
 
                     -- If the Instruction requires an immediate value incriment PC and fetch it
                     IF (AM = am_immediate OR AM = am_direct) THEN
-                        PC_Select <= "00";
+                        IM_Store <= '1'; -- Store immediate
+
+                        PC_Select <= "00"; -- Incriment PC
                         PC_Store <= '1';
-                        IM_Store <= '1';
                     END IF;
                     
                     -- Complete Inherent Instructions
@@ -193,7 +194,7 @@ BEGIN
                                     DM_LOAD <= '1';
                                     Address_Select <= "00";
                                 WHEN OTHERS =>
-                                    -- do nothing 
+                                    NULL; -- do nothing 
                             END CASE;
 
                         WHEN str =>
@@ -209,7 +210,7 @@ BEGIN
                                     Address_Select <= "00";
                                     Data_Select <= "01";
                                 WHEN OTHERS =>
-                                    -- do nothing     
+                                    NULL; -- do nothing     
                             END CASE;
 
                         WHEN jmp =>
@@ -280,7 +281,7 @@ BEGIN
                     FSM_STATE <= "00";
 
                 WHEN OTHERS =>
-                    -- DO nothing need this for 
+                    -- This shouldn't happen
             END CASE;
         END IF;
     END PROCESS;

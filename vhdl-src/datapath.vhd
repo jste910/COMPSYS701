@@ -49,20 +49,39 @@ ARCHITECTURE behavior OF datapath IS
 
     COMPONENT ControlUnit
         PORT (
-            Address_Select : OUT STD_LOGIC_VECTOR(1 DOWNTO 0); -- Address select for the instruction memory
-            Data_Select : OUT STD_LOGIC_VECTOR(1 DOWNTO 0); -- Data select for the data memory
-            ALU_Select : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
-            Reg_Select : OUT STD_LOGIC_VECTOR(2 DOWNTO 0); -- Register select for the register file
-            PC_Select : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
+            -- INPUTS
+            CLK : IN STD_LOGIC;
             CMP0 : IN STD_LOGIC;
-            MysteriousGreenLine : IN STD_LOGIC; -- Control signal for the instruction memory
-            IM_Store : OUT STD_LOGIC; -- Control signal for the instruction memory
-            IM_Load : OUT STD_LOGIC; -- Control signal for the instruction memory
-            IR_Load : OUT STD_LOGIC; -- Control signal for the instruction memory
-            Register_Store : IN STD_LOGIC; -- Control signal for the register file
-            ALU_OP : OUT STD_LOGIC_VECTOR(2 DOWNTO 0); -- ALU operation code
-            DM_LOAD : OUT STD_LOGIC; -- Control signal for the data memory load
-            DM_STORE : OUT STD_LOGIC -- Control signal for the data memory store
+            OP_Code : IN STD_LOGIC_VECTOR(5 DOWNTO 0);
+            AM : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
+            Z_Flag : IN STD_LOGIC;
+
+            -- OUTPUTS DATA FLOW
+            Address_Select : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
+            Data_Select : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
+            ALU_Select : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
+            ALU_Select_2 : OUT STD_LOGIC;
+            Reg_Select : OUT STD_LOGIC_VECTOR(2 DOWNTO 0);
+            PC_Select : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
+            DPCR_Select : OUT STD_LOGIC;
+
+            -- OUTPUTS MIAN CONTROL
+            PC_Store : OUT STD_LOGIC;
+            IM_Store : OUT STD_LOGIC;
+            IR_Load : OUT STD_LOGIC;
+            Reg_Store : OUT STD_LOGIC;
+            ALU_OP : OUT STD_LOGIC_VECTOR(2 DOWNTO 0);
+            DM_LOAD : OUT STD_LOGIC;
+            DM_STORE : OUT STD_LOGIC;
+
+            -- OUTPUTS IO / REG CONTROL
+            DPCR_Store : OUT STD_LOGIC;
+            CLR_Z_Flag : OUT STD_LOGIC;
+            ER_Clear : OUT STD_LOGIC;
+            EOT_Clear : OUT STD_LOGIC;
+            EOT_Set : OUT STD_LOGIC;
+            SVOP_Set : OUT STD_LOGIC;
+            SOP_Set : OUT STD_LOGIC;
         );
     END COMPONENT;
 
@@ -265,6 +284,40 @@ BEGIN
         ALU_OP => ALU_OPERATION, -- ALU operation code
         DM_LOAD => DATAM_LOAD, -- Control signal for the data memory load
         DM_STORE => DATAM_STORE -- Control signal for the data memory store
+
+        -- INPUTS
+        CLK =>
+        CMP0 => COMPARE_OUTPUT,
+        OP_Code => THATONEGREENLINE(13 DOWNTO 8),
+        AM => THATONEGREENLINE(15 DOWNTO 14),
+        Z_Flag => AL_Z_FLAG,
+
+        -- OUTPUTS DATA FLOW
+        Address_Select => ADDRESS_SELECT,
+        Data_Select => DATA_SELECT,
+        ALU_Select => ALU_OP1_SEL,
+        ALU_Select_2 => ALU_OP2_SEL,
+        Reg_Select => REGISTER_SELECT,
+        PC_Select => PROGRAM_SELECT,
+        DPCR_Select  -- We have two DCPRs atm lol
+
+        -- OUTPUTS MIAN CONTROL
+        PC_Store 
+        IM_Store 
+        IR_Load => IR_LOAD,
+        Reg_Store => STORE_REGISTER,
+        ALU_OP => ALU_OPERATION,
+        DM_LOAD => DATAM_LOAD,
+        DM_STORE => DATAM_STORE,
+        
+        -- OUTPUTS IO / REG CONTROL
+        DPCR_Store 
+        CLR_Z_Flag
+        ER_Clear
+        EOT_Clear
+        EOT_Set
+        SVOP
+        SOP
     );
 
     reg : regfile
