@@ -2,10 +2,15 @@ import subprocess
 import os
 import argparse
 
-def assemble_and_patch_mif(asm_file: str, output_mif: str, assembler: str = "mrasm.exe", original_mif: str = "rawOutput.mif"):
+def assemble_and_patch_mif(asm_file: str, output_mif: str = None, assembler: str = "mrasm.exe", original_mif: str = "rawOutput.mif"):
     if not os.path.exists(assembler):
         print(f"Assembler not found at: {assembler}")
         return
+
+    # Generate default output file if not provided
+    if output_mif is None:
+        base_name = os.path.splitext(asm_file)[0]
+        output_mif = f"{base_name}customAssebled.mif"
 
     # Step 1: Run the assembler
     result = subprocess.run([assembler, asm_file], capture_output=True, text=True)
@@ -71,13 +76,11 @@ def assemble_and_patch_mif(asm_file: str, output_mif: str, assembler: str = "mra
 
 
 def main():
-    # Parse command line arguments
     parser = argparse.ArgumentParser(description="Assemble an ASM file and patch its MIF output.")
     parser.add_argument("asm_file", help="Path to the input ASM file.")
-    parser.add_argument("output_mif", help="Path to the output MIF file.")
+    parser.add_argument("output_mif", nargs="?", help="Optional path to output MIF file (defaults to <input>Corrected.mif)")
     args = parser.parse_args()
 
-    # Run the assemble and patch function
     assemble_and_patch_mif(args.asm_file, args.output_mif)
 
 
