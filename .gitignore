@@ -3,6 +3,7 @@
 
 # Keep .gitignore itself
 !.gitignore
+!.md
 
 # Include assembler folder and all its contents
 !assembler/
@@ -24,3 +25,4 @@
 !vhdl-src/**/*.sof
 !vhdl-src/**/*.tcl
 !vhdl-src/**/class.ptf
+
