@@ -100,8 +100,7 @@ ARCHITECTURE behavior OF datapath IS
             ir_operand : IN bit_16;
             -- flag control signal
             clr_z_flag : IN bit_1;
-            reset : IN bit_1;
-            ALU_SELECT : IN bit_2
+            reset : IN bit_1
         );
     END COMPONENT;
 
@@ -281,7 +280,7 @@ BEGIN
         compare => COMPARE_OUTPUT
     );
 
-    Alu : ALU
+    definitelyTheALU : ALU
     PORT MAP(
         clk => PROCESSOR_CLK,
         z_flag => ALU_Z_FLAG,
@@ -330,8 +329,11 @@ BEGIN
         -- SIP
         sip => X"0000", -- Need to map to switchs
         sip_r => SIP,
-        -- DPRR / IRQ
-        
+        -- DPRR / IRQ <! The 5 signals below are needed to be implemented>
+		irq_wr=> '0',
+		irq_clr=>'0',
+		result_wen=>'0',
+		result =>'0'
     );
 
     DMM : DataMemoryModule

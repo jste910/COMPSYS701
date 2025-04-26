@@ -52,7 +52,7 @@ ARCHITECTURE behavior OF ControlUnit IS
 BEGIN
     PROCESS (CLK, Reset)
     BEGIN
-        IF Reset THEN
+        IF Reset = '1' THEN
             FSM_STATE <= "00";
         ELSIF rising_edge(CLK) THEN
             -- Default values each clock cycle
