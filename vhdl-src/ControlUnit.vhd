@@ -86,7 +86,7 @@ BEGIN
                     -- Instruction Fetch
                     IR_Load <= '1';
 
-                    -- Incriment PC by 2
+                    -- Increment PC by 2
                     PC_Select <= "00";
                     PC_Store <= '1';
                     
@@ -95,11 +95,11 @@ BEGIN
                 WHEN "01" =>
                     -- Instruction Decode / Register Access
 
-                    -- If the Instruction requires an immediate value incriment PC and fetch it
+                    -- If the Instruction requires an immediate value Increment PC and fetch it
                     IF (AM = am_immediate OR AM = am_direct) THEN
                         IM_Store <= '1'; -- Store immediate
 
-                        PC_Select <= "00"; -- Incriment PC
+                        PC_Select <= "00"; -- Increment PC
                         PC_Store <= '1';
                     END IF;
                     
