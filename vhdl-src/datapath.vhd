@@ -25,16 +25,15 @@ ARCHITECTURE behavior OF datapath IS
         );
     END COMPONENT;
 
-    COMPONENT InstructionModule
-        PORT (
-            IM_Store : IN STD_LOGIC;
-            IM_Load : IN STD_LOGIC;
-            IR_Load : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-            PC : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- 16-bit input b
-            Instruction : OUT STD_LOGIC;
-            Immediate : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-            Rx_Set : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-            Rz_Set : OUT STD_LOGIC_VECTOR(15 DOWNTO 0)
+    COMPONENT program_mem_module
+        port (
+            clk					: in  std_logic;
+            rst					: in  std_logic;
+            address				: in  std_logic_vector(14 downto 0);
+            IM_Store			: in  std_logic;
+            IR_Load				: in  std_logic;
+            immediate_reg		: out std_logic_vector(15 downto 0);
+            instr_header_reg	: out std_logic_vector(15 downto 0)
         );
     END COMPONENT;
 
@@ -76,36 +75,6 @@ ARCHITECTURE behavior OF datapath IS
         );
     END COMPONENT;
 
-    COMPONENT regfile
-        PORT (
-            clk : IN bit_1;
-            init : IN bit_1;
-            -- control signal to allow data to write into Rz
-            ld_r : IN bit_1;
-            -- Rz and Rx select signals
-            sel_z : IN INTEGER RANGE 0 TO 15;
-            sel_x : IN INTEGER RANGE 0 TO 15;
-            -- register data outputs
-            rx : OUT bit_16;
-            rz : OUT bit_16;
-            -- select signal for input data to be written into Rz
-            rf_input_sel : IN bit_3;
-            -- input data
-            ir_operand : IN bit_16;
-            dm_out : IN bit_16;
-            aluout : IN bit_16;
-            rz_max : IN bit_16;
-            sip_hold : IN bit_16;
-            er_temp : IN bit_1;
-            -- R7 for writing to lower byte of dpcr
-            r7 : OUT bit_16;
-            dprr_res : IN bit_1;
-            dprr_res_reg : IN bit_1;
-            dprr_wren : IN bit_1
-        );
-
-    END COMPONENT;
-
     COMPONENT comparator
         PORT (
             a : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- 16-bit input a
@@ -114,7 +83,7 @@ ARCHITECTURE behavior OF datapath IS
         );
     END COMPONENT;
 
-    COMPONENT ArithmaticLogicUnit
+    COMPONENT ALU
         PORT (
             clk : IN bit_1;
             z_flag : OUT bit_1;
@@ -134,6 +103,42 @@ ARCHITECTURE behavior OF datapath IS
             reset : IN bit_1;
             ALU_SELECT : IN bit_2
         );
+    END COMPONENT;
+
+    COMPONENT Registers
+        port (
+            clk : in bit_1;
+            reset : in bit_1;
+            dpcr: out bit_32;
+            r7 : in bit_16;
+            rx : in bit_16;
+            ir_operand : in bit_16;
+            dpcr_lsb_sel : in bit_1;
+            dpcr_wr : in bit_1;
+            -- environment ready and set and clear signals
+            er: out bit_1;
+            er_wr : in bit_1;
+            er_clr : in bit_1;
+            -- end of thread and set and clear signals
+            eot: out bit_1;
+            eot_wr : in bit_1;
+            eot_clr : in bit_1;
+            -- svop and write enable signal
+            svop : out bit_16;
+            svop_wr : in bit_1;
+            -- sip souce and registered outputs
+            sip_r : out bit_16;
+            sip : in bit_16;
+            -- sop and write enable signal
+            sop : out bit_16;
+            sop_wr : in bit_1;
+            -- dprr, irq (dprr(1)) set and clear signals and result source and write enable signal
+            dprr :out bit_2;
+            irq_wr:in bit_1;
+            irq_clr:in bit_1;
+            result_wen: in bit_1;
+            result :in bit_1
+            );
     END COMPONENT;
 
     COMPONENT DataMemoryModule
@@ -159,11 +164,10 @@ ARCHITECTURE behavior OF datapath IS
         );
     END COMPONENT;
 
-    -- TOP LEVEL CONTROL
+    -- OVERALL SIGNALS
     SIGNAL INPUT_CLK : STD_LOGIC;
     SIGNAL PROCESSOR_CLK : STD_LOGIC;
     SIGNAL RESET : STD_LOGIC;
-    
     
     -- DATA SIGNALS
     SIGNAL PROGRAM_COUNTER : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
@@ -173,70 +177,43 @@ ARCHITECTURE behavior OF datapath IS
     SIGNAL IMMEDIATE : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
     SIGNAL INSTRUCTION : STD_LOGIC_VECTOR(7 DOWNTO 0);
     SIGNAL ALU_OUTPUT : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
-
-
-    --
-
-
-    SIGNAL COMPARE_OUTPUT : STD_LOGIC;
-    SIGNAL PROGRAM_SELECT : STD_LOGIC_VECTOR(1 DOWNTO 0);
-    SIGNAL REG_MAX : STD_LOGIC_VECTOR(15 DOWNTO 0) := "1111111111111111";
-    
-
-    SIGNAL DATAM_LOAD : STD_LOGIC;
-    SIGNAL DATAM_STORE : STD_LOGIC;
     SIGNAL DATAM_OUTPUT : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
-    SIGNAL INSTRUCTION_STORE : STD_LOGIC;
-    SIGNAL INSTRUCTION_LOAD : STD_LOGIC;
-    SIGNAL INSTRUCTION_REG_LOAD : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
-    SIGNAL IR_LOAD : STD_LOGIC;
+    SIGNAL SIP : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000"; 
+    SIGNAL ER : STD_LOGIC := '0';
+
+    -- MEMORY CONTROL SIGNALS
     SIGNAL ADDRESS_SELECT : STD_LOGIC_VECTOR(1 DOWNTO 0) := "00";
     SIGNAL DATA_SELECT : STD_LOGIC_VECTOR(1 DOWNTO 0) := "00";
-    SIGNAL Arithmatic_SELECT : STD_LOGIC_VECTOR(1 DOWNTO 0) := "00";
-    SIGNAL REGISTER_SELECT : STD_LOGIC_VECTOR(2 DOWNTO 0) := "000";
-    SIGNAL STORE_REGISTER : STD_LOGIC;
-    
-    SIGNAL ALU_OP_CODE : STD_LOGIC_VECTOR(2 DOWNTO 0);
-    SIGNAL REGISTER7 : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
-    SIGNAL Environment_Read : STD_LOGIC;
-    SIGNAL Environment_Write : STD_LOGIC;
-    SIGNAL Environment_Clear : STD_LOGIC;
-    SIGNAL EoT : STD_LOGIC;
-    SIGNAL EoT_Write : STD_LOGIC;
-    SIGNAL EoT_Clear : STD_LOGIC;
-    SIGNAL SVOPLINE : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
-    SIGNAL SVOP_WRITE : STD_LOGIC;
-    SIGNAL SIP : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
-    SIGNAL SIP_REG : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
-    SIGNAL SOP_LINE : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
-    SIGNAL SOP_WRITE : STD_LOGIC;
-    SIGNAL dprr_reg : STD_LOGIC_VECTOR(1 DOWNTO 0) := "00";
-    SIGNAL RESULT_WRITE_ENABLE : STD_LOGIC;
-    SIGNAL RESULT : STD_LOGIC;
-    SIGNAL IRQ_WRITE_ENABLE : STD_LOGIC;
-    SIGNAL IRQ_CLEAR_ENABLE : STD_LOGIC;
-    SIGNAL dpcr_reg : STD_LOGIC_VECTOR(31 DOWNTO 0) := "00000000000000000000000000000000";
-    SIGNAL instruction_register : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
-    SIGNAL dpcr_lsb_sel : STD_LOGIC;
-    SIGNAL dpcr_wr : STD_LOGIC;
-    SIGNAL temporary_environment : STD_LOGIC;
-    SIGNAL dprr_result : STD_LOGIC;
-    SIGNAL dprr_res_reg : STD_LOGIC;
-    SIGNAL dprr_wren : STD_LOGIC;
-    SIGNAL sip_reg_hold : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
-    SIGNAL REGFILE_INIT : STD_LOGIC;
-    SIGNAL LOAD_REG : STD_LOGIC;
-    SIGNAL Rz_integer : INTEGER := 1;
-    SIGNAL Rx_integer : INTEGER := 0; -- Register select for Rz and Rx
-    SIGNAL rf_input_sel : STD_LOGIC_VECTOR(2 DOWNTO 0) := "000"; -- Select signal for input data to be written into Rz
-    SIGNAL INSTRUCTION_REG : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
-    SIGNAL AL_Z_FLAG : STD_LOGIC := '0'; -- ALU zero flag
+    SIGNAL DATAM_LOAD : STD_LOGIC;
+    SIGNAL DATAM_STORE : STD_LOGIC;
+
+    -- ALU CONTROL SIGNALS
+    SIGNAL ALU_OPERATION : STD_LOGIC_VECTOR(2 DOWNTO 0) := "000"; -- ALU operation selection
     SIGNAL ALU_OP1_SEL : STD_LOGIC_VECTOR(1 DOWNTO 0) := "00"; -- ALU operand selection
     SIGNAL ALU_OP2_SEL : STD_LOGIC; -- ALU operand selection
-    SIGNAL ALU_CARRY : STD_LOGIC := '0'; -- ALU carry in
-    SIGNAL CLR_Z_FLAG : STD_LOGIC := '0'; -- ALU clear zero flag
-    SIGNAL ALU_RESULT : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000"; -- ALU result
-    SIGNAL ALU_OPERATION : STD_LOGIC_VECTOR(2 DOWNTO 0) := "000"; -- ALU operation selection
+    SIGNAL ALU_Z_FLAG : STD_LOGIC; -- ALU zero flag
+    SIGNAL CLR_Z_FLAG : STD_LOGIC; -- ALU clear zero flag   
+
+    -- INSTRUCTION / PROGRAM COUNTER CONTROL
+    SIGNAL IR_LOAD : STD_LOGIC;
+    SIGNAL IM_STORE : STD_LOGIC;
+    SIGNAL PROGRAM_SELECT : STD_LOGIC_VECTOR(1 DOWNTO 0);
+    SIGNAL PROGRAM_SET : STD_LOGIC;
+
+    -- REGISTER CONTROL SIGNALS
+    SIGNAL SVOP_WRITE : STD_LOGIC;
+    SIGNAL SOP_WRITE : STD_LOGIC;
+    SIGNAL ER_CLEAR : STD_LOGIC;
+    SIGNAL EOT_SET : STD_LOGIC;
+    SIGNAL EOT_CLEAR : STD_LOGIC;
+    SIGNAL DPCR_WRITE : STD_LOGIC;
+    SIGNAL DPCR_SELECT : STD_LOGIC;
+    SIGNAL REGISTER_SELECT : STD_LOGIC_VECTOR(2 DOWNTO 0) := "000";
+    SIGNAL REGISTER_STORE : STD_LOGIC;
+
+    -- OTHER CONTROL SIGNALS    
+    SIGNAL COMPARE_OUTPUT : STD_LOGIC;
+ 
 BEGIN
 
     PC : ProgramCounter
@@ -249,16 +226,15 @@ BEGIN
         PC => PROGRAM_COUNTER 
     );
 
-    IM : InstructionModule
+    IM : program_mem_module
     PORT MAP(
-        IM_Store => INSTRUCTION_STORE,
-        IM_Load => INSTRUCTION_LOAD,
-        IR_Load => INSTRUCTION_REG_LOAD,
-        PC => PROGRAM_COUNTER,
-        Instruction => INSTRUCTION,
-        Immediate => IMMEDIATE,
-        Rx_Set => RX_LINE,
-        Rz_Set => RZ_LINE
+        clk => PROCESSOR_CLK,
+        rst => RESET,
+        address => PROGRAM_COUNTER(14 DOWNTO 0), --the adress is only 15 bits wide for some reason
+        IM_Store => IM_STORE,
+        IR_Load => IR_LOAD,
+        immediate_reg => IMMEDIATE,
+        instr_header_reg => INSTRUCTION
     );
 
     CU : ControlUnit
@@ -268,7 +244,7 @@ BEGIN
         CMP0 => COMPARE_OUTPUT,
         OP_Code => INSTRUCTION(13 DOWNTO 8),
         AM => INSTRUCTION(15 DOWNTO 14),
-        Z_Flag => AL_Z_FLAG,
+        Z_Flag => ALU_Z_FLAG,
 
         -- OUTPUTS DATA FLOW
         Address_Select => ADDRESS_SELECT,
@@ -283,7 +259,7 @@ BEGIN
         PC_Store => PC_STORE,
         IM_Store => IM_STORE,
         IR_Load => IR_LOAD,
-        Reg_Store => STORE_REGISTER,
+        Reg_Store => REGISTER_STORE,
         ALU_OP => ALU_OPERATION,
         DM_LOAD => DATAM_LOAD,
         DM_STORE => DATAM_STORE,
@@ -298,62 +274,64 @@ BEGIN
         SOP_Set => SOP_SET
     );
 
-
-    
-    reg : regfile
-    PORT MAP(
-        clk => PROCESSOR_CLK,
-        init => REGFILE_INIT,
-        -- control signal to allow data to write into Rz
-        ld_r => LOAD_REG,
-        -- Rz and Rx select signals
-        sel_z => Rz_integer,
-        sel_x => Rx_integer,
-        -- register data outputs
-        rx => RX_LINE,
-        rz => RZ_LINE,
-        -- select signal for input data to be written into Rz
-        rf_input_sel => REGISTER_SELECT,
-        -- input data
-        ir_operand => INSTRUCTION_REG,
-        dm_out => DATAM_OUTPUT,
-        aluout => ALU_RESULT,
-        rz_max => REG_MAX,
-        sip_hold => sip_reg_hold,
-        er_temp => temporary_environment,
-        -- R7 for writing to lower byte of dpcr
-        r7 => REGISTER7,
-        dprr_res => dprr_result,
-        dprr_res_reg => dprr_res_reg,
-        dprr_wren => dprr_wren
-    );
-
     COMP : comparator
     PORT MAP(
-        a => RZ_LINE,
+        a => RZ,
         b => "0000000000000000",
         compare => COMPARE_OUTPUT
     );
 
-    Alu : arithmaticlogicunit
+    Alu : ALU
     PORT MAP(
         clk => PROCESSOR_CLK,
-        z_flag => AL_Z_FLAG,
+        z_flag => ALU_Z_FLAG,
         -- ALU operation selection
         alu_operation => ALU_OPERATION,
         -- operand selection
         alu_op1_sel => ALU_OP1_SEL,
         alu_op2_sel => ALU_OP2_SEL,
-        alu_carry => ALU_CARRY, --WARNING: carry in currently is not used
+        alu_carry => '0',
         alu_result => ALU_RESULT,
         -- operands
-        rx => RX_LINE,
-        rz => RZ_LINE,
-        ir_operand => instruction_register,
+        rx => RX,
+        rz => RZ,
+        ir_operand => IMMEDIATE,
         -- flag control signal
         clr_z_flag => CLR_Z_FLAG,
-        reset => RESET_ALU,
-        ALU_SELECT => Arithmatic_SELECT
+        reset => RESET
+    );
+
+    REG : Registers
+    PORT MAP(
+        clk => PROCESSOR_CLK,
+        reset => RESET,
+        -- INPUT
+        r7 => R7,
+        rx => RX,
+        ir_operand => IMMEDIATE,
+        -- DPCR
+        dpcr => OPEN,
+        dpcr_lsb_sel => DPCR_SELECT,
+        dpcr_wr => DPCR_WRITE,
+        -- ER
+        er => ER,
+        er_wr => '0', -- I dont get why ER has a write signal, I though it was event capture
+        er_clr => ER_CLEAR,
+        -- EOT
+        eot => OPEN, -- no clue where to pipe this
+        eot_wr => EOT_SET,
+        eot_clr => EOT_CLEAR,
+        -- SVOP
+        svop => OPEN, -- add mapping to 7seg
+        svop_wr => SVOP_WRITE,
+        -- SOP
+        sop => OPEN, -- add mapping to LEDs
+        sop_wr => SOP_WRITE,
+        -- SIP
+        sip => X"0000", -- Need to map to switchs
+        sip_r => SIP,
+        -- DPRR / IRQ
+        
     );
 
     DMM : DataMemoryModule
@@ -361,8 +339,8 @@ BEGIN
         Address_SEL => ADDRESS_SELECT,
         Data_SEL => DATA_SELECT,
         Immediate => IMMEDIATE,
-        Rz => RZ_LINE,
-        Rx => RX_LINE,
+        Rz => RZ,
+        Rx => RX,
         PC => PROGRAM_COUNTER,
         DM_LOAD => DATAM_LOAD,
         DM_STORE => DATAM_STORE,
