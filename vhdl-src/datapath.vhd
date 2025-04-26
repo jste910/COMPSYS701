@@ -25,16 +25,15 @@ ARCHITECTURE behavior OF datapath IS
         );
     END COMPONENT;
 
-    COMPONENT InstructionModule
-        PORT (
-            IM_Store : IN STD_LOGIC;
-            IM_Load : IN STD_LOGIC;
-            IR_Load : IN STD_LOGIC_VECTOR(15 DOWNTO 0);
-            PC : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- 16-bit input b
-            Instruction : OUT STD_LOGIC;
-            Immediate : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-            Rx_Set : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-            Rz_Set : OUT STD_LOGIC_VECTOR(15 DOWNTO 0)
+    COMPONENT program_mem_module
+        port (
+            clk					: in  std_logic;
+            rst					: in  std_logic;
+            address				: in  std_logic_vector(14 downto 0);
+            IM_Store			: in  std_logic;
+            IR_Load				: in  std_logic;
+            immediate_reg		: out std_logic_vector(15 downto 0);
+            instr_header_reg	: out std_logic_vector(15 downto 0)
         );
     END COMPONENT;
 
@@ -241,7 +240,7 @@ BEGIN
 
     PC : ProgramCounter
     PORT MAP(
-        Rx => RX 
+        Rx => RX,
         Immediate => IMMEDIATE, 
         PC_SEL => PROGRAM_SELECT,
         PC_SET => PROGRAM_SET,
@@ -249,16 +248,15 @@ BEGIN
         PC => PROGRAM_COUNTER 
     );
 
-    IM : InstructionModule
+    IM : program_mem_module
     PORT MAP(
-        IM_Store => INSTRUCTION_STORE,
-        IM_Load => INSTRUCTION_LOAD,
-        IR_Load => INSTRUCTION_REG_LOAD,
-        PC => PROGRAM_COUNTER,
-        Instruction => INSTRUCTION,
-        Immediate => IMMEDIATE,
-        Rx_Set => RX_LINE,
-        Rz_Set => RZ_LINE
+        clk => PROCESSOR_CLK,
+        rst => RESET,
+        address => PROGRAM_COUNTER(14 DOWNTO 0), --the adress is only 15 bits wide for some reason
+        IM_Store => IM_STORE,
+        IR_Load => IR_LOAD,
+        immediate_reg => IMMEDIATE,
+        instr_header_reg => INSTRUCTION
     );
 
     CU : ControlUnit
@@ -277,7 +275,7 @@ BEGIN
         ALU_Select_2 => ALU_OP2_SEL,
         Reg_Select => REGISTER_SELECT,
         PC_Select => PROGRAM_SELECT,
-        DPCR_Select  -- We have two DCPRs atm lol
+        DPCR_Select 
 
         -- OUTPUTS MIAN CONTROL
         PC_Store => PC_STORE,
@@ -330,7 +328,7 @@ BEGIN
 
     COMP : comparator
     PORT MAP(
-        a => RZ_LINE,
+        a => RZ,
         b => "0000000000000000",
         compare => COMPARE_OUTPUT
     );
@@ -347,8 +345,8 @@ BEGIN
         alu_carry => ALU_CARRY, --WARNING: carry in currently is not used
         alu_result => ALU_RESULT,
         -- operands
-        rx => RX_LINE,
-        rz => RZ_LINE,
+        rx => RX,
+        rz => RZ,
         ir_operand => instruction_register,
         -- flag control signal
         clr_z_flag => CLR_Z_FLAG,
@@ -361,8 +359,8 @@ BEGIN
         Address_SEL => ADDRESS_SELECT,
         Data_SEL => DATA_SELECT,
         Immediate => IMMEDIATE,
-        Rz => RZ_LINE,
-        Rx => RX_LINE,
+        Rz => RZ,
+        Rx => RX,
         PC => PROGRAM_COUNTER,
         DM_LOAD => DATAM_LOAD,
         DM_STORE => DATAM_STORE,
