@@ -72,7 +72,7 @@ ARCHITECTURE behavior OF datapath IS
             EOT_Clear : OUT STD_LOGIC;
             EOT_Set : OUT STD_LOGIC;
             SVOP_Set : OUT STD_LOGIC;
-            SOP_Set : OUT STD_LOGIC;
+            SOP_Set : OUT STD_LOGIC
         );
     END COMPONENT;
 
@@ -171,7 +171,7 @@ ARCHITECTURE behavior OF datapath IS
     SIGNAL RX : STD_LOGIC_VECTOR(15 DOWNTO 0);
     SIGNAL R7 : STD_LOGIC_VECTOR(15 DOWNTO 0);
     SIGNAL IMMEDIATE : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
-    SIGNAL INSTRUCTION : STD_LOGIC(7 DOWNTO 0);
+    SIGNAL INSTRUCTION : STD_LOGIC_VECTOR(7 DOWNTO 0);
     SIGNAL ALU_OUTPUT : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
 
 
@@ -241,7 +241,7 @@ BEGIN
 
     PC : ProgramCounter
     PORT MAP(
-        Rx => RX 
+        Rx => RX,
         Immediate => IMMEDIATE, 
         PC_SEL => PROGRAM_SELECT,
         PC_SET => PROGRAM_SET,
@@ -277,7 +277,7 @@ BEGIN
         ALU_Select_2 => ALU_OP2_SEL,
         Reg_Select => REGISTER_SELECT,
         PC_Select => PROGRAM_SELECT,
-        DPCR_Select  -- We have two DCPRs atm lol
+        -- DPCR_Select  -- We have two DCPRs atm lol
 
         -- OUTPUTS MIAN CONTROL
         PC_Store => PC_STORE,

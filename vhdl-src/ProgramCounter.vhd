@@ -19,14 +19,14 @@ BEGIN
     PROCESS (CLK)
     BEGIN
         IF rising_edge(CLK) THEN
-            IF PC_SET THEN
+            IF PC_SET = '1' THEN
                 CASE PC_SEL IS
                     WHEN "00" => -- PC = PC + 2
-                        PC_SIG <= PC_SIG + X"0002";
+                    PC_SIG <= std_logic_vector(unsigned(PC_SIG) + 2);
                     WHEN "01" => -- PC = Immediate
-                        PC_SIG <= Immediate
+                        PC_SIG <= Immediate;
                     WHEN "10" => -- PC = Rx
-                        PC_SIG <= Rx
+                        PC_SIG <= Rx;
                     WHEN OTHERS => -- Default case
                         PC_SIG <= X"0000";
                 END CASE;
