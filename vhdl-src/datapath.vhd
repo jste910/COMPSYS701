@@ -205,9 +205,9 @@ ARCHITECTURE behavior OF datapath IS
     SIGNAL RX : STD_LOGIC_VECTOR(15 DOWNTO 0);
     SIGNAL R7 : STD_LOGIC_VECTOR(15 DOWNTO 0);
     SIGNAL IMMEDIATE : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
-    SIGNAL INSTRUCTION : STD_LOGIC_VECTOR(7 DOWNTO 0);
+    SIGNAL INSTRUCTION : STD_LOGIC_VECTOR(15 DOWNTO 0);
     SIGNAL ALU_OUTPUT : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
-    SIGNAL DATAM_OUTPUT : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
+    SIGNAL DATAM_OUT : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
     SIGNAL SIP : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000"; 
     SIGNAL ER : STD_LOGIC := '0';
 
@@ -231,8 +231,8 @@ ARCHITECTURE behavior OF datapath IS
     SIGNAL PROGRAM_SET : STD_LOGIC;
 
     -- REGISTER CONTROL SIGNALS
-    SIGNAL SVOP_WRITE : STD_LOGIC;
-    SIGNAL SOP_WRITE : STD_LOGIC;
+    SIGNAL SVOP_SET : STD_LOGIC;
+    SIGNAL SOP_SET : STD_LOGIC;
     SIGNAL ER_CLEAR : STD_LOGIC;
     SIGNAL EOT_SET : STD_LOGIC;
     SIGNAL EOT_CLEAR : STD_LOGIC;
@@ -286,7 +286,7 @@ BEGIN
         DPCR_Select => DPCR_SELECT,
 
         -- OUTPUTS MIAN CONTROL
-        PC_Store => PC_STORE,
+        PC_Store => PROGRAM_SET,
         IM_Store => IM_STORE,
         IR_Load => IR_LOAD,
         Reg_Store => REGISTER_STORE,
@@ -296,8 +296,8 @@ BEGIN
         
         -- OUTPUTS IO / REG CONTROL
         Init => INIT,
-        DPCR_Store => DPCR_STORE,
-        Z_Clear => Z_CLEAR,
+        DPCR_Store => DPCR_WRITE,
+        Z_Clear => CLR_Z_FLAG,
         ER_Clear => ER_CLEAR,
         EOT_Clear => EOT_CLEAR,
         EOT_Set => EOT_SET,
@@ -375,10 +375,10 @@ BEGIN
         eot_clr => EOT_CLEAR,
         -- SVOP
         svop => OPEN, -- add mapping to 7seg
-        svop_wr => SVOP_WRITE,
+        svop_wr => SVOP_SET,
         -- SOP
         sop => OPEN, -- add mapping to LEDs
-        sop_wr => SOP_WRITE,
+        sop_wr => SOP_SET,
         -- SIP
         sip => X"0000", -- Need to map to switchs
         sip_r => SIP,
@@ -401,7 +401,7 @@ BEGIN
         DM_LOAD => DATAM_LOAD,
         DM_STORE => DATAM_STORE,
         DM_CLK => PROCESSOR_CLK,
-        DM_OUT => DATAM_OUTPUT
+        DM_OUT => DATAM_OUT
     );
 
     CLOCK : recop_pll
