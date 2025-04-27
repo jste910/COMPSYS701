@@ -51,12 +51,12 @@ ENTITY ControlUnit IS
 END ENTITY ControlUnit;
 
 ARCHITECTURE behavior OF ControlUnit IS
-    SIGNAL FSM_STATE : STD_LOGIC_VECTOR(1 DOWNTO 0) := "00";
+    SIGNAL FSM_STATE : STD_LOGIC_VECTOR(2 DOWNTO 0) := "000";
 BEGIN
     PROCESS (CLK, Reset)
     BEGIN
         IF Reset = '1' THEN
-            FSM_STATE <= "00";
+            FSM_STATE <= "000";
         ELSIF rising_edge(CLK) THEN
             -- Default values each clock cycle
             Address_Select <= "00";
@@ -85,7 +85,11 @@ BEGIN
             SOP_Set <= '0';
 
             CASE FSM_STATE IS
-                WHEN "00" =>
+                WHEN "000" =>
+                    -- Inital state
+                    FSM_STATE <= "001";
+
+                WHEN "001" =>
                     -- Instruction Fetch
                     IR_Load <= '1';
 
@@ -93,9 +97,9 @@ BEGIN
                     PC_Select <= "00";
                     PC_Store <= '1';
                     
-                    FSM_STATE <= "01"; -- Move to decode
+                    FSM_STATE <= "010"; -- Move to decode
 
-                WHEN "01" =>
+                WHEN "010" =>
                     -- Instruction Decode / Register Access
 
                     -- If the Instruction requires an immediate value Increment PC and fetch it
@@ -135,21 +139,21 @@ BEGIN
                     END CASE;
 
                     IF (AM = am_inherent) THEN
-                        FSM_STATE <= "00"; -- Inhearent instruction is finished 
+                        FSM_STATE <= "001"; -- Inhearent instruction is finished 
                     ELSE
-                        FSM_STATE <= "10"; -- Go to Execute / Mem
+                        FSM_STATE <= "011"; -- Go to Execute / Mem
                     END IF;
 
-                WHEN "10" =>
+                WHEN "011" =>
                     -- Execute / Memory access
 
                     -- Assume that we wont be doing a writeback 
-                    FSM_STATE <= "00";
+                    FSM_STATE <= "001";
 
                     -- BEHOLD THE CASE STATEMENT!
                     CASE OP_Code IS
                         WHEN andr =>
-                            FSM_STATE <= "11";
+                            FSM_STATE <= "100";
                             ALU_OP <= alu_and;
                             IF (AM = am_immediate) THEN
 
@@ -158,7 +162,7 @@ BEGIN
                                 ALU_Select <= "01";
                             END IF;
                         WHEN orr =>
-                            FSM_STATE <= "11";
+                            FSM_STATE <= "100";
                             ALU_OP <= alu_or;
                             IF (AM = am_immediate) THEN
                                 ALU_Select <= "00";
@@ -167,7 +171,7 @@ BEGIN
                             END IF;
 
                         WHEN addr =>
-                            FSM_STATE <= "11";
+                            FSM_STATE <= "100";
                             ALU_OP <= alu_add;
                             IF (AM = am_immediate) THEN
                                 ALU_Select <= "00";
@@ -176,7 +180,7 @@ BEGIN
                             END IF;
 
                         WHEN subvr =>
-                            FSM_STATE <= "11";
+                            FSM_STATE <= "100";
                             ALU_OP <= alu_sub;
                             ALU_Select <= "00";
                             ALU_Select_2 <= '0';
@@ -189,15 +193,15 @@ BEGIN
                         WHEN ldr =>
                             CASE AM IS
                                 WHEN am_immediate =>
-                                    FSM_STATE <= "00";
+                                    FSM_STATE <= "001";
                                     Reg_Store <= '1';
                                     Reg_Select <= "011";
                                 WHEN am_register =>
-                                    FSM_STATE <= "11";
+                                    FSM_STATE <= "100";
                                     DM_LOAD <= '1';
                                     Address_Select <= "10";
                                 WHEN am_direct =>
-                                    FSM_STATE <= "11";
+                                    FSM_STATE <= "100";
                                     DM_LOAD <= '1';
                                     Address_Select <= "00";
                                 WHEN OTHERS =>
@@ -269,7 +273,7 @@ BEGIN
                             NULL;
                     END CASE;
 
-                WHEN "11" =>
+                WHEN "100" =>
                     -- Writeback Stage
 
                     IF (OP_Code = present) THEN
@@ -288,10 +292,16 @@ BEGIN
                     END IF;
 
 
-                    FSM_STATE <= "00";
+                    FSM_STATE <= "001";
+
+                WHEN "111" =>
+                    -- HALT
+                    -- STOP RIGHT THERE CRIMINAL SCUM YOU HAVE VIOLATED THE LAW!
+                    NULL;
 
                 WHEN OTHERS =>
                     -- This shouldn't happen
+                    NULL;
             END CASE;
         END IF;
     END PROCESS;
