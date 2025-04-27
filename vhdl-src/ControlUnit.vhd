@@ -139,7 +139,9 @@ BEGIN
                     END CASE;
 
                     IF (AM = am_inherent) THEN
-                        FSM_STATE <= "001"; -- Inhearent instruction is finished 
+                        FSM_STATE <= "001"; -- Inhearent instruction is finished
+                    ELSIF (OP_Code = ler OR OP_Code = lsip) THEN
+                        FSM_STATE <= "001"; -- Simp Register write finished
                     ELSE
                         FSM_STATE <= "011"; -- Go to Execute / Mem
                     END IF;
@@ -195,7 +197,7 @@ BEGIN
                                 WHEN am_immediate =>
                                     FSM_STATE <= "001";
                                     Reg_Store <= '1';
-                                    Reg_Select <= "011";
+                                    Reg_Select <= "100";
                                 WHEN am_register =>
                                     FSM_STATE <= "100";
                                     DM_LOAD <= '1';
