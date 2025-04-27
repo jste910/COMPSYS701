@@ -43,10 +43,10 @@ ENTITY ControlUnit IS
         EOT_Clear : OUT STD_LOGIC;
         EOT_Set : OUT STD_LOGIC;
         SVOP_Set : OUT STD_LOGIC;
-        SOP_Set : OUT STD_LOGIC
+        SOP_Set : OUT STD_LOGIC;
 
         -- DEBUG UTIL
-        STATE : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
+        STATE : OUT STD_LOGIC_VECTOR(1 DOWNTO 0)
     );
 END ENTITY ControlUnit;
 

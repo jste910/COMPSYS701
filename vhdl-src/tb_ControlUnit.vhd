@@ -3,7 +3,7 @@ USE ieee.std_logic_1164.ALL;
 USE ieee.std_logic_unsigned.ALL;
 USE ieee.std_logic_arith.ALL;
 
-USE work.opcodes.ALL;
+USE work.opcodes.ALL; -- Import the opcodes package
 USE work.various_constants.ALL;
 
 ENTITY tb_ControlUnit IS
@@ -46,7 +46,8 @@ ARCHITECTURE behavior OF tb_ControlUnit IS
             EOT_Clear : OUT STD_LOGIC;
             EOT_Set : OUT STD_LOGIC;
             SVOP_Set : OUT STD_LOGIC;
-            SOP_Set : OUT STD_LOGIC
+            SOP_Set : OUT STD_LOGIC;
+            STATE : OUT STD_LOGIC_VECTOR(1 DOWNTO 0)
         );
     END COMPONENT;
 
@@ -55,19 +56,52 @@ ARCHITECTURE behavior OF tb_ControlUnit IS
     SIGNAL OP_Code : STD_LOGIC_VECTOR(5 DOWNTO 0);
     SIGNAL AM : STD_LOGIC_VECTOR(1 DOWNTO 0);
 
-    SIGNAL Address_Select, Data_Select, ALU_Select, PC_Select : STD_LOGIC_VECTOR(1 DOWNTO 0);
+    SIGNAL Address_Select, Data_Select, ALU_Select, PC_Select, STATE : STD_LOGIC_VECTOR(1 DOWNTO 0);
     SIGNAL ALU_Select_2, DPCR_Select, DPCR_Store, Z_Clear, ER_Clear, EOT_Clear : STD_LOGIC;
     SIGNAL IM_Store, IR_Load, Reg_Store, DM_LOAD, DM_STORE : STD_LOGIC;
     SIGNAL Reg_Select : STD_LOGIC_VECTOR(2 DOWNTO 0);
     SIGNAL ALU_OP : STD_LOGIC_VECTOR(2 DOWNTO 0);
-    SIGNAL EOT_Set, SVOP_Set, SOP_Set, PC_Store: STD_LOGIC;
+    SIGNAL EOT_Set, SVOP_Set, SOP_Set, PC_Store : STD_LOGIC;
+
+    -- Define arrays for OP_Code and AM
+    TYPE op_code_array_t IS ARRAY (0 TO 9) OF STD_LOGIC_VECTOR(5 DOWNTO 0);
+    TYPE am_array_t IS ARRAY (0 TO 9) OF STD_LOGIC_VECTOR(1 DOWNTO 0);
+
+    -- Declare program memory signals (OP_Code and AM arrays)
+    SIGNAL op_codes : op_code_array_t := (
+        ldr, -- LDR
+        ldr, -- LDR
+        andr, -- AND
+        orr, -- OR
+        subvr, -- SUBV
+        subr, -- SUB
+        jmp, -- JMP
+        jmp, -- JMP
+        sz, -- SZ
+        cer -- CER
+    );
+
+    SIGNAL am_modes : am_array_t := (
+        am_immediate, -- Immediate
+        am_direct, -- Direct
+        am_immediate, -- Immediate
+        am_direct, -- Direct
+        am_inherent, -- Inherent
+        am_inherent, -- Inherent
+        am_immediate, -- Immediate
+        am_direct, -- Direct
+        am_direct, -- Direct
+        am_inherent -- Inherent
+    );
+
+    SIGNAL instruction_pointer : INTEGER := 0; -- Pointer to the current instruction in program memory
 
     CONSTANT clk_period : TIME := 10 ns;
 
 BEGIN
 
     -- UUT instantiation
-    uut: ControlUnit PORT MAP (
+    uut : ControlUnit PORT MAP(
         CLK => CLK, Reset => '0', CMP0 => CMP0, OP_Code => OP_Code, AM => AM, Z_Flag => Z_Flag,
         Address_Select => Address_Select, Data_Select => Data_Select,
         ALU_Select => ALU_Select, ALU_Select_2 => ALU_Select_2, Reg_Select => Reg_Select,
@@ -75,68 +109,42 @@ BEGIN
         PC_Store => PC_Store, IM_Store => IM_Store, IR_Load => IR_Load, Reg_Store => Reg_Store,
         ALU_OP => ALU_OP, DM_LOAD => DM_LOAD, DM_STORE => DM_STORE,
         Z_Clear => Z_Clear, ER_Clear => ER_Clear, EOT_Clear => EOT_Clear,
-        EOT_Set => EOT_Set, SVOP_Set => SVOP_Set, SOP_Set => SOP_Set
+        EOT_Set => EOT_Set, SVOP_Set => SVOP_Set, SOP_Set => SOP_Set,
+        STATE => STATE
     );
 
     -- Clock generation
-    clk_process: PROCESS
+    clk_process : PROCESS
     BEGIN
         WHILE TRUE LOOP
-            CLK <= '0'; WAIT FOR clk_period / 2;
-            CLK <= '1'; WAIT FOR clk_period / 2;
+            CLK <= '1';
+            WAIT FOR clk_period / 2;
+            CLK <= '0';
+            WAIT FOR clk_period / 2;
         END LOOP;
     END PROCESS;
 
-    -- Stimulus process
-    stim_proc: PROCESS
-        PROCEDURE test(op: STD_LOGIC_VECTOR(5 DOWNTO 0); am_mode: STD_LOGIC_VECTOR(1 DOWNTO 0); flag: STD_LOGIC := '0') IS
-        BEGIN
-            OP_Code <= op;
-            AM <= am_mode;
-            Z_Flag <= flag;
-
-            WAIT FOR clk_period;
-        END PROCEDURE;
+    -- Stimulus process to fetch instructions
+    stim_proc : PROCESS
+        VARIABLE i : INTEGER := 0;
     BEGIN
-        WAIT FOR 20 ns;
+        -- Initial values for OP_Code and AM
+        OP_Code <= (OTHERS => '0'); -- Default values
+        AM <= (OTHERS => '0');
 
-        -- Core ALU Instructions
-        test(addr, am_immediate);
-        test(addr, am_direct);
-        test(andr, am_immediate);
-        test(orr, am_direct);
-        test(subvr, am_inherent);
-        test(subr, am_inherent);
+        -- Fetch instructions from program memory
+        -- WAIT FOR 20 ns;
 
-        -- Memory Instructions
-        test(ldr, am_immediate);
-        test(ldr, am_direct);
-        test(ldr, am_register);
-        test(str, am_immediate);
-        test(str, am_direct);
-        test(str, am_register);
-
-        -- Branching and Control Flow
-        test(jmp, am_immediate);
-        test(jmp, am_direct);
-        test(sz, am_direct, '1');
-        test(clfz, am_inherent);
-
-        -- I/O or system control
-        test(datacall, am_register);
-        test(datacall2, am_immediate);
-        test(present, am_direct);
-        test(strpc, am_direct);
-        test(ler, am_direct);
-        test(lsip, am_direct);
-        test(ssvop, am_direct);
-        test(ssop, am_direct);
-        test(noop, am_inherent);
-        test(cer, am_inherent);
-        test(seot, am_inherent);
-        test(ceot, am_inherent);
-        test(max, am_immediate);
-        test(sres, am_register);
+        WHILE TRUE LOOP
+            IF IR_Load = '1' THEN
+                -- Fetch the opcode and addressing mode from the arrays
+                OP_Code <= op_codes(i);
+                AM <= am_modes(i);
+                instruction_pointer <= i + 1;
+                i := i + 1;
+            END IF;
+            WAIT FOR clk_period;
+        END LOOP;
 
         -- End simulation
         WAIT;
