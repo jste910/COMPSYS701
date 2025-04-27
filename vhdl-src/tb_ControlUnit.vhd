@@ -69,29 +69,71 @@ ARCHITECTURE behavior OF tb_ControlUnit IS
 
     -- Declare program memory signals (OP_Code and AM arrays)
     SIGNAL op_codes : op_code_array_t := (
-        ldr, -- LDR
-        ldr, -- LDR
-        andr, -- AND
+        andr, -- LDR
+        andr, -- LDR
+        orr, -- AND
         orr, -- OR
-        subvr, -- SUBV
-        subr, -- SUB
-        jmp, -- JMP
-        jmp, -- JMP
-        sz, -- SZ
-        cer -- CER
+        addr, -- SUBV
+        addr, -- SUB
+        subvr, -- JMP
+        subr, -- JMP
+        ldr, -- SZ
+        ldr, -- CER
+        ldr,
+        str,
+        str,
+        str,
+        jmp,
+        jmp,
+        present,
+        datacall,
+        datacall2,
+        sz,
+        clfz,
+        cer,
+        ceot,
+        seot,
+        ler,
+        ssvop,
+        lsip,
+        ssop,
+        noop,
+        max,
+        strpc
     );
 
     SIGNAL am_modes : am_array_t := (
         am_immediate, -- Immediate
-        am_direct, -- Direct
+        am_register, -- Direct
         am_immediate, -- Immediate
-        am_direct, -- Direct
-        am_inherent, -- Inherent
-        am_inherent, -- Inherent
+        am_register, -- Direct
         am_immediate, -- Immediate
-        am_direct, -- Direct
-        am_direct, -- Direct
-        am_inherent -- Inherent
+        am_register, -- Direct
+        am_immediate, -- Immediate
+        am_immediate, -- Immediate
+        am_immediate, -- Immediate
+        am_register, -- Direct
+        am_direct, 
+        am_immediate, -- Immediate
+        am_register, -- Direct
+        am_direct, 
+        am_immediate, -- Immediate
+        am_register, -- Direct
+        am_immediate, -- Immediate
+        am_register, -- Direct
+        am_immediate, -- Immediate
+        am_immediate, -- Immediate
+        am_inherent,
+        am_inherent,
+        am_inherent,
+        am_inherent,
+        am_register,
+        am_register,
+        am_register,
+        am_register,
+        am_inherent,
+        am_immediate, -- Immediate
+        am_direct
     );
 
     SIGNAL instruction_pointer : INTEGER := 0; -- Pointer to the current instruction in program memory
@@ -117,9 +159,9 @@ BEGIN
     clk_process : PROCESS
     BEGIN
         WHILE TRUE LOOP
-            CLK <= '1';
-            WAIT FOR clk_period / 2;
             CLK <= '0';
+            WAIT FOR clk_period / 2;
+            CLK <= '1';
             WAIT FOR clk_period / 2;
         END LOOP;
     END PROCESS;
