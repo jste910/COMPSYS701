@@ -228,13 +228,13 @@ BEGIN
                         WHEN jmp =>
                             PC_Store <= '1';
                             IF (AM = am_immediate) THEN
-                                PC_Select <= "00";
+                                PC_Select <= "01";
                             ELSE
                                 PC_Select <= "10";
                             END IF;
 
                         WHEN present =>
-                            NULL; -- Wait for comparitor
+                            FSM_STATE <= "100";
 
                         WHEN datacall =>
                             DPCR_Store <= '1';
@@ -261,7 +261,6 @@ BEGIN
                         WHEN max =>
                             FSM_STATE <= "100";
                             ALU_OP <= alu_max;
-                            Reg_Select <= "010";
                             ALU_Select <= "00";
                             ALU_Select_2 <= '1';
 
@@ -285,8 +284,15 @@ BEGIN
                         ELSE
                             PC_Store <= '0';
                         END IF;
+                    ELSIF (OP_Code = ldr) THEN
+                        Reg_Select <= "011";
                     ELSE
                         Reg_Store <= '1';
+                        IF (AM = am_immediate) THEN
+                            ALU_Select <= "00";
+                        ELSE
+                            ALU_Select <= "01";
+                        END IF;
                         CASE OP_Code IS
                             WHEN andr =>
                                 ALU_OP <= alu_and;
@@ -294,14 +300,10 @@ BEGIN
                                 ALU_OP <= alu_or;
                             WHEN addr =>
                                 ALU_OP <= alu_add;
-                            WHEN subr =>
-                                ALU_OP <= alu_sub;
                             WHEN subvr =>
                                 ALU_OP <= alu_sub;
                             WHEN max =>
                                 ALU_OP <= alu_max;
-                            WHEN ldr =>
-                                Reg_Select <= "011";
                             WHEN OTHERS =>
                                 NULL;
                         END CASE;
