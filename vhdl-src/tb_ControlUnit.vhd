@@ -1,8 +1,8 @@
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 USE ieee.std_logic_unsigned.ALL;
+USE ieee.std_logic_arith.ALL;
 
--- Include your packages
 USE work.opcodes.ALL;
 USE work.various_constants.ALL;
 
@@ -13,12 +13,15 @@ ARCHITECTURE behavior OF tb_ControlUnit IS
 
     COMPONENT ControlUnit
         PORT (
+            -- INPUTS
             CLK : IN STD_LOGIC;
+            Reset : IN STD_LOGIC;
             CMP0 : IN STD_LOGIC;
             OP_Code : IN STD_LOGIC_VECTOR(5 DOWNTO 0);
             AM : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
             Z_Flag : IN STD_LOGIC;
 
+            -- OUTPUTS DATA FLOW
             Address_Select : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
             Data_Select : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
             ALU_Select : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
@@ -27,14 +30,23 @@ ARCHITECTURE behavior OF tb_ControlUnit IS
             PC_Select : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
             DPCR_Select : OUT STD_LOGIC;
 
-            DPCR_Store : OUT STD_LOGIC;
+            -- OUTPUTS MAIN CONTROL
             PC_Store : OUT STD_LOGIC;
+            IM_Store : OUT STD_LOGIC;
             IR_Load : OUT STD_LOGIC;
             Reg_Store : OUT STD_LOGIC;
             ALU_OP : OUT STD_LOGIC_VECTOR(2 DOWNTO 0);
             DM_LOAD : OUT STD_LOGIC;
             DM_STORE : OUT STD_LOGIC;
-            CLR_Z_Flag : OUT STD_LOGIC
+
+            -- OUTPUTS IO / REG CONTROL
+            DPCR_Store : OUT STD_LOGIC;
+            Z_Clear : OUT STD_LOGIC;
+            ER_Clear : OUT STD_LOGIC;
+            EOT_Clear : OUT STD_LOGIC;
+            EOT_Set : OUT STD_LOGIC;
+            SVOP_Set : OUT STD_LOGIC;
+            SOP_Set : OUT STD_LOGIC
         );
     END COMPONENT;
 
@@ -44,9 +56,11 @@ ARCHITECTURE behavior OF tb_ControlUnit IS
     SIGNAL AM : STD_LOGIC_VECTOR(1 DOWNTO 0);
 
     SIGNAL Address_Select, Data_Select, ALU_Select, PC_Select : STD_LOGIC_VECTOR(1 DOWNTO 0);
-    SIGNAL ALU_Select_2, DPCR_Select, DPCR_Store, PC_Store, IR_Load, Reg_Store, DM_LOAD, DM_STORE, CLR_Z_Flag : STD_LOGIC;
+    SIGNAL ALU_Select_2, DPCR_Select, DPCR_Store, Z_Clear, ER_Clear, EOT_Clear : STD_LOGIC;
+    SIGNAL IM_Store, IR_Load, Reg_Store, DM_LOAD, DM_STORE : STD_LOGIC;
     SIGNAL Reg_Select : STD_LOGIC_VECTOR(2 DOWNTO 0);
     SIGNAL ALU_OP : STD_LOGIC_VECTOR(2 DOWNTO 0);
+    SIGNAL EOT_Set, SVOP_Set, SOP_Set, PC_Store: STD_LOGIC;
 
     CONSTANT clk_period : TIME := 10 ns;
 
@@ -54,13 +68,14 @@ BEGIN
 
     -- UUT instantiation
     uut: ControlUnit PORT MAP (
-        CLK => CLK, CMP0 => CMP0, OP_Code => OP_Code, AM => AM, Z_Flag => Z_Flag,
+        CLK => CLK, Reset => '0', CMP0 => CMP0, OP_Code => OP_Code, AM => AM, Z_Flag => Z_Flag,
         Address_Select => Address_Select, Data_Select => Data_Select,
         ALU_Select => ALU_Select, ALU_Select_2 => ALU_Select_2, Reg_Select => Reg_Select,
         PC_Select => PC_Select, DPCR_Select => DPCR_Select, DPCR_Store => DPCR_Store,
-        PC_Store => PC_Store, IR_Load => IR_Load, Reg_Store => Reg_Store,
+        PC_Store => PC_Store, IM_Store => IM_Store, IR_Load => IR_Load, Reg_Store => Reg_Store,
         ALU_OP => ALU_OP, DM_LOAD => DM_LOAD, DM_STORE => DM_STORE,
-        CLR_Z_Flag => CLR_Z_Flag
+        Z_Clear => Z_Clear, ER_Clear => ER_Clear, EOT_Clear => EOT_Clear,
+        EOT_Set => EOT_Set, SVOP_Set => SVOP_Set, SOP_Set => SOP_Set
     );
 
     -- Clock generation
@@ -79,6 +94,7 @@ BEGIN
             OP_Code <= op;
             AM <= am_mode;
             Z_Flag <= flag;
+
             WAIT FOR clk_period;
         END PROCEDURE;
     BEGIN
