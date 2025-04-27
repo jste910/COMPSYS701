@@ -99,7 +99,7 @@ BEGIN
                     -- Instruction Decode / Register Access
 
                     -- If the Instruction requires an immediate value Increment PC and fetch it
-                    IF (AM = am_immediate OR AM = am_direct) vb THEN
+                    IF (AM = am_immediate OR AM = am_direct) THEN
                         IM_Store <= '1'; -- Store immediate
 
                         PC_Select <= "00"; -- Increment PC
