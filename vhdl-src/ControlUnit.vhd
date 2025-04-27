@@ -46,7 +46,7 @@ ENTITY ControlUnit IS
         SOP_Set : OUT STD_LOGIC;
 
         -- DEBUG UTIL
-        STATE : OUT STD_LOGIC_VECTOR(1 DOWNTO 0)
+        STATE : OUT STD_LOGIC_VECTOR(2 DOWNTO 0)
     );
 END ENTITY ControlUnit;
 
@@ -258,7 +258,7 @@ BEGIN
                             SOP_Set <= '1';
 
                         WHEN max =>
-                            FSM_STATE <= "11";
+                            FSM_STATE <= "100";
                             ALU_OP <= alu_max;
                             Reg_Select <= "010";
                             ALU_Select <= "00";

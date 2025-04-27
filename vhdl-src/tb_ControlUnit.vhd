@@ -47,7 +47,7 @@ ARCHITECTURE behavior OF tb_ControlUnit IS
             EOT_Set : OUT STD_LOGIC;
             SVOP_Set : OUT STD_LOGIC;
             SOP_Set : OUT STD_LOGIC;
-            STATE : OUT STD_LOGIC_VECTOR(1 DOWNTO 0)
+            STATE : OUT STD_LOGIC_VECTOR(2 DOWNTO 0)
         );
     END COMPONENT;
 
@@ -56,10 +56,10 @@ ARCHITECTURE behavior OF tb_ControlUnit IS
     SIGNAL OP_Code : STD_LOGIC_VECTOR(5 DOWNTO 0);
     SIGNAL AM : STD_LOGIC_VECTOR(1 DOWNTO 0);
 
-    SIGNAL Address_Select, Data_Select, ALU_Select, PC_Select, STATE : STD_LOGIC_VECTOR(1 DOWNTO 0);
+    SIGNAL Address_Select, Data_Select, ALU_Select, PC_Select : STD_LOGIC_VECTOR(1 DOWNTO 0);
     SIGNAL ALU_Select_2, DPCR_Select, DPCR_Store, Z_Clear, ER_Clear, EOT_Clear : STD_LOGIC;
     SIGNAL IM_Store, IR_Load, Reg_Store, DM_LOAD, DM_STORE : STD_LOGIC;
-    SIGNAL Reg_Select : STD_LOGIC_VECTOR(2 DOWNTO 0);
+    SIGNAL Reg_Select, STATE : STD_LOGIC_VECTOR(2 DOWNTO 0);
     SIGNAL ALU_OP : STD_LOGIC_VECTOR(2 DOWNTO 0);
     SIGNAL EOT_Set, SVOP_Set, SOP_Set, PC_Store : STD_LOGIC;
 
