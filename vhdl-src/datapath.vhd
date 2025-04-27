@@ -62,9 +62,10 @@ ARCHITECTURE behavior OF datapath IS
             Reg_Store : OUT STD_LOGIC;
             ALU_OP : OUT STD_LOGIC_VECTOR(2 DOWNTO 0);
             DM_LOAD : OUT STD_LOGIC;
-            DM_STORE : OUT STD_LOGIC;
+            DM_STORE : OUT STD_LOGIC; 
 
             -- OUTPUTS IO / REG CONTROL
+            Init : OUT STD_LOGIC;
             DPCR_Store : OUT STD_LOGIC;
             Z_Clear : OUT STD_LOGIC;
             ER_Clear : OUT STD_LOGIC;
@@ -196,6 +197,7 @@ ARCHITECTURE behavior OF datapath IS
     SIGNAL INPUT_CLK : STD_LOGIC;
     SIGNAL PROCESSOR_CLK : STD_LOGIC;
     SIGNAL RESET : STD_LOGIC;
+    SIGNAL INIT : STD_LOGIC := '1';
     
     -- DATA SIGNALS
     SIGNAL PROGRAM_COUNTER : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
@@ -293,6 +295,7 @@ BEGIN
         DM_STORE => DATAM_STORE,
         
         -- OUTPUTS IO / REG CONTROL
+        Init => INIT,
         DPCR_Store => DPCR_STORE,
         Z_Clear => Z_CLEAR,
         ER_Clear => ER_CLEAR,
@@ -305,7 +308,7 @@ BEGIN
     REGF: regfile
     PORT MAP(
         clk => PROCESSOR_CLK,
-        init => RESET,
+        init => RESET OR INIT,
         ld_r => REGISTER_STORE,
         sel_z => INSTRUCTION(7 DOWNTO 4),
         sel_x => INSTRUCTION(3 DOWNTO 0),
