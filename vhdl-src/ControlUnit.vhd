@@ -44,6 +44,9 @@ ENTITY ControlUnit IS
         EOT_Set : OUT STD_LOGIC;
         SVOP_Set : OUT STD_LOGIC;
         SOP_Set : OUT STD_LOGIC
+
+        -- DEBUG UTIL
+        STATE : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
     );
 END ENTITY ControlUnit;
 
@@ -288,4 +291,5 @@ BEGIN
             END CASE;
         END IF;
     END PROCESS;
+    STATE <= FSM_STATE;
 END behavior;
