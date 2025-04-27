@@ -180,9 +180,18 @@ BEGIN
         WHILE TRUE LOOP
             IF IR_Load = '1' THEN
                 -- Fetch the opcode and addressing mode from the arrays
+                IF(i = 30) THEN
+                    i := 0;
+                    Z_Flag <= '1';
+                    CMP0 <= '1';
+                    
+                END IF;
+                
                 OP_Code <= op_codes(i);
                 AM <= am_modes(i);
+                
                 instruction_pointer <= i + 1;
+                
                 i := i + 1;
             END IF;
             WAIT FOR clk_period;
