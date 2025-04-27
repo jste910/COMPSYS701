@@ -1,4 +1,5 @@
 -- Zoran Salcic
+-- Modified by JIMMY!
 
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
@@ -15,8 +16,8 @@ ENTITY regfile IS
 		-- control signal to allow data to write into Rz
 		ld_r : IN bit_1;
 		-- Rz and Rx select signals
-		sel_z : IN INTEGER RANGE 0 TO 15;
-		sel_x : IN INTEGER RANGE 0 TO 15;
+		sel_z : IN bit_4;
+		sel_x : IN bit_4;
 		-- register data outputs
 		rx : OUT bit_16;
 		rz : OUT bit_16;
@@ -26,7 +27,6 @@ ENTITY regfile IS
 		ir_operand : IN bit_16;
 		dm_out : IN bit_16;
 		aluout : IN bit_16;
-		rz_max : IN bit_16;
 		sip_hold : IN bit_16;
 		er_temp : IN bit_1;
 		-- R7 for writing to lower byte of dpcr
@@ -50,19 +50,17 @@ BEGIN
 	BEGIN
 		CASE rf_input_sel IS
 			WHEN "000" =>
-				data_input_z <= ir_operand;
-			WHEN "001" => -- note: This line and the one below it used to be indented but it is unclear if that was important
-				data_input_z <= X"000" & "000" & dprr_res_reg;
-			WHEN "011" =>
 				data_input_z <= aluout;
-			WHEN "100" =>
-				data_input_z <= rz_max;
-			WHEN "101" =>
-				data_input_z <= sip_hold;
-			WHEN "110" =>
+			WHEN "001" => 
 				data_input_z <= X"000" & "000" & er_temp;
-			WHEN "111" =>
+			WHEN "010" =>
+				data_input_z <= sip_hold;
+			WHEN "011" =>
 				data_input_z <= dm_out;
+			WHEN "100" =>
+				data_input_z <= ir_operand;
+			WHEN "101" => -- Still no clue how DPRR works
+				data_input_z <= X"000" & "000" & dprr_res_reg;
 			WHEN OTHERS =>
 				data_input_z <= X"0000";
 		END CASE;
@@ -75,13 +73,13 @@ BEGIN
 		ELSIF rising_edge(clk) THEN
 			-- write data into Rz if ld signal is asserted
 			IF ld_r = '1' THEN
-				regs(sel_z) <= data_input_z;
+				regs(to_integer(unsigned(sel_z))) <= data_input_z;
 			ELSIF dprr_wren = '1' THEN
 				regs(0) <= X"000" & "000" & dprr_res;
 			END IF;
 		END IF;
 	END PROCESS;
-	rx <= regs(sel_x);
-	rz <= regs(sel_z);
-
+	rx <= regs(to_integer(unsigned(sel_x)));
+	rz <= regs(to_integer(unsigned(sel_z)));
+	
 END beh;

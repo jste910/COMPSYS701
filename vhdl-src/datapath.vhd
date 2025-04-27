@@ -75,6 +75,35 @@ ARCHITECTURE behavior OF datapath IS
         );
     END COMPONENT;
 
+    COMPONENT regfile 
+        PORT (
+            clk : IN bit_1;
+            init : IN bit_1;
+            -- control signal to allow data to write into Rz
+            ld_r : IN bit_1;
+            -- Rz and Rx select signals
+            sel_z : IN bit_4;
+            sel_x : IN bit_4;
+            -- register data outputs
+            rx : OUT bit_16;
+            rz : OUT bit_16;
+            -- select signal for input data to be written into Rz
+            rf_input_sel : IN bit_3;
+            -- input data
+            ir_operand : IN bit_16;
+            dm_out : IN bit_16;
+            aluout : IN bit_16;
+            sip_hold : IN bit_16;
+            er_temp : IN bit_1;
+            -- R7 for writing to lower byte of dpcr
+            r7 : OUT bit_16;
+            dprr_res : IN bit_1;
+            dprr_res_reg : IN bit_1;
+            dprr_wren : IN bit_1
+
+        );
+    END COMPONENT;
+
     COMPONENT comparator
         PORT (
             a : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- 16-bit input a
@@ -252,7 +281,7 @@ BEGIN
         ALU_Select_2 => ALU_OP2_SEL,
         Reg_Select => REGISTER_SELECT,
         PC_Select => PROGRAM_SELECT,
-        -- DPCR_Select  -- We have two DCPRs atm lol
+        DPCR_Select => DPCR_SELECT,
 
         -- OUTPUTS MIAN CONTROL
         PC_Store => PC_STORE,
@@ -273,6 +302,27 @@ BEGIN
         SOP_Set => SOP_SET
     );
 
+    REGF: regfile
+    PORT MAP(
+        clk => PROCESSOR_CLK,
+        init => RESET,
+        ld_r => REGISTER_STORE,
+        sel_z => INSTRUCTION(7 DOWNTO 4),
+        sel_x => INSTRUCTION(3 DOWNTO 0),
+        rx => RX,
+        rz => RZ,
+        rf_input_sel => REGISTER_SELECT,
+        ir_operand => IMMEDIATE,
+        dm_out => DATAM_OUT,
+        aluout => ALU_OUTPUT,
+        sip_hold => SIP,
+        er_temp => ER,
+        r7 => R7,
+        dprr_res => '0',
+        dprr_res_reg => '0',
+        dprr_wren => '0'
+    );
+
     COMP : comparator
     PORT MAP(
         a => RZ,
@@ -280,7 +330,7 @@ BEGIN
         compare => COMPARE_OUTPUT
     );
 
-    definitelyTheALU : ALU
+    definitelyTheALU : ALU -- Dawg why is it named this
     PORT MAP(
         clk => PROCESSOR_CLK,
         z_flag => ALU_Z_FLAG,
@@ -290,7 +340,7 @@ BEGIN
         alu_op1_sel => ALU_OP1_SEL,
         alu_op2_sel => ALU_OP2_SEL,
         alu_carry => '0',
-        alu_result => ALU_RESULT,
+        alu_result => ALU_OUTPUT,
         -- operands
         rx => RX,
         rz => RZ,
@@ -330,6 +380,7 @@ BEGIN
         sip => X"0000", -- Need to map to switchs
         sip_r => SIP,
         -- DPRR / IRQ <! The 5 signals below are needed to be implemented>
+        dprr => OPEN,
 		irq_wr=> '0',
 		irq_clr=>'0',
 		result_wen=>'0',
@@ -356,7 +407,5 @@ BEGIN
         inclk0 => INPUT_CLK,
         c0 => PROCESSOR_CLK
     );
-
-    INPUT_CLK <= NOT INPUT_CLK; -- setup a temp clock
 
 END behavior;
