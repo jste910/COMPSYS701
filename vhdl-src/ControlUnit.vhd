@@ -99,7 +99,7 @@ BEGIN
                     -- Instruction Decode / Register Access
 
                     -- If the Instruction requires an immediate value Increment PC and fetch it
-                    IF (AM = am_immediate OR AM = am_direct) THEN
+                    IF (AM = am_immediate OR AM = am_direct) vb THEN
                         IM_Store <= '1'; -- Store immediate
 
                         PC_Select <= "00"; -- Increment PC
@@ -187,16 +187,17 @@ BEGIN
                             ALU_Select_2 <= '1';
 
                         WHEN ldr =>
-                            FSM_STATE <= "11";
                             CASE AM IS
                                 WHEN am_immediate =>
-                                    Reg_Select <= "100";
-                                WHEN am_register =>
+                                    FSM_STATE <= "00";
+                                    Reg_Store <= '1';
                                     Reg_Select <= "011";
+                                WHEN am_register =>
+                                    FSM_STATE <= "11";
                                     DM_LOAD <= '1';
                                     Address_Select <= "10";
                                 WHEN am_direct =>
-                                    Reg_Select <= "011";
+                                    FSM_STATE <= "11";
                                     DM_LOAD <= '1';
                                     Address_Select <= "00";
                                 WHEN OTHERS =>
@@ -281,6 +282,9 @@ BEGIN
                         END IF;
                     ELSE
                         Reg_Store <= '1';
+                        IF OP_CODE = ldr THEN
+                            Reg_Select <= "011";
+                        END IF;
                     END IF;
 
 
