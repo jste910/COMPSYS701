@@ -158,7 +158,6 @@ BEGIN
                             FSM_STATE <= "100";
                             ALU_OP <= alu_and;
                             IF (AM = am_immediate) THEN
-
                                 ALU_Select <= "00";
                             ELSE
                                 ALU_Select <= "01";
@@ -278,6 +277,8 @@ BEGIN
                 WHEN "100" =>
                     -- Writeback Stage
 
+                    
+
                     IF (OP_Code = present) THEN
                         --  do the Branch is needed
                         PC_Select <= "01";
@@ -288,9 +289,22 @@ BEGIN
                         END IF;
                     ELSE
                         Reg_Store <= '1';
-                        IF OP_CODE = ldr THEN
-                            Reg_Select <= "011";
-                        END IF;
+                        CASE OP_Code IS
+                            WHEN andr =>
+                                ALU_OP <= alu_and;
+                            WHEN orr =>
+                                ALU_OP <= alu_or;
+                            WHEN addr =>
+                                ALU_OP <= alu_add;
+                            WHEN subr =>
+                                ALU_OP <= alu_sub;
+                            WHEN subvr =>
+                                ALU_OP <= alu_sub;
+                            WHEN max =>
+                                ALU_OP <= alu_max;
+                            WHEN ldr =>
+                                Reg_Select <= "011";
+                        END CASE;
                     END IF;
 
 
