@@ -304,6 +304,7 @@ BEGIN
                                 ALU_OP <= alu_sub;
                             WHEN max =>
                                 ALU_OP <= alu_max;
+                                ALU_Select_2 <= '1';
                             WHEN OTHERS =>
                                 NULL;
                         END CASE;
