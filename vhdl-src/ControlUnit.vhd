@@ -277,8 +277,6 @@ BEGIN
                 WHEN "100" =>
                     -- Writeback Stage
 
-                    
-
                     IF (OP_Code = present) THEN
                         --  do the Branch is needed
                         PC_Select <= "01";
@@ -304,6 +302,8 @@ BEGIN
                                 ALU_OP <= alu_max;
                             WHEN ldr =>
                                 Reg_Select <= "011";
+                            WHEN OTHERS =>
+                                NULL;
                         END CASE;
                     END IF;
 
