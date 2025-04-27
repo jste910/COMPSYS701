@@ -407,8 +407,8 @@ BEGIN
     CLOCK : recop_pll
     PORT MAP
     (
-        inclk0 => INPUT_CLK,
-        c0 => PROCESSOR_CLK
+        inclk0 => INPUT_CLK, -- Should be like 50Mhz
+        c0 => OPEN -- PROCESSOR_CLK
     );
 
 END behavior;
