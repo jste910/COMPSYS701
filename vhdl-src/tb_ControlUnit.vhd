@@ -64,8 +64,8 @@ ARCHITECTURE behavior OF tb_ControlUnit IS
     SIGNAL EOT_Set, SVOP_Set, SOP_Set, PC_Store : STD_LOGIC;
 
     -- Define arrays for OP_Code and AM
-    TYPE op_code_array_t IS ARRAY (0 TO 9) OF STD_LOGIC_VECTOR(5 DOWNTO 0);
-    TYPE am_array_t IS ARRAY (0 TO 9) OF STD_LOGIC_VECTOR(1 DOWNTO 0);
+    TYPE op_code_array_t IS ARRAY (0 TO 30) OF STD_LOGIC_VECTOR(5 DOWNTO 0);
+    TYPE am_array_t IS ARRAY (0 TO 30) OF STD_LOGIC_VECTOR(1 DOWNTO 0);
 
     -- Declare program memory signals (OP_Code and AM arrays)
     SIGNAL op_codes : op_code_array_t := (
