@@ -46,7 +46,7 @@ begin
 			immediate_reg_int		<= (others => '0');
 			instr_header_reg_int	<= (others => '0');
 		elsif rising_edge(clk) then
-			if 	 = '1' then
+			if IM_Store = '1' then
 				immediate_reg_int <= rom_data;
 			end if;
 
