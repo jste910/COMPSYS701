@@ -26,7 +26,7 @@ Click `Open`
 
 Click on the highlighted 3 dots again
 
-Naviage to COMPSYS701
+Naviage to COMPSYS701/vhdl-src
 
 select program.mif
 
@@ -80,46 +80,42 @@ The Progress bar should then progress to 100%
 If successful, the Board should show signs of life
 
 
+The program.mif that was written to the FPGA was initially written in assembly instructions which was then converted into a .mif file.
 
-This done using the assembly instructions which is converted to a .MIF file, which is loaded onto the FPGA and accessed by our program memory. 
+1) The assembly instructions in file `program.asm`  can be viewed under `COMPSYS701\assembler\ReCOP-ASM Package\program.asm`
 
-1) The assembly instructions can be viewed under: *your_repository_name/submission_files/quartus/input.asm*
+2) The .mif file can be viewed under `COMPSYS701\vhdl-src\program.mif`
 
-2) The .MIF file can be viewed under: *your_repository_name/submission_files/quartus/output.mif*
+To write a program, modify program.asm and use the instructions given in the instruction set. It should be written as normal assembly code, however the specific instructions can be found in the `instruction.md` table at the bottom of this file.
 
+use mrasm.exe
 
-
-To write a program, modify input.asm and use the instructions given in the instruction set. It should be written like normal assembly code however, there are some rules that need to be followed for ReCOP. 
-- For JMP and PRESENT instructions, use labels as the operand (i.e address of jump)
-- NOOP after PRESENT and JMP instructions and NOOP at the location of the label as the first instruction
-- End each instruction using a semi-colon
-- The instruction formatting is based on what is written in the given instruction set
-- There is a typo in the assembler where 'SUBV' should be written as 'SUBVR' in the .asm file. 
-- There are no comments allowed 
-- Please refer to our report to find the instruction set that has been implemented to ensure that your code works
-- If any issues, please contact the team. We have tested extensively each instruction that we have implemented and mentioned under the **Success** column of the instructions in our report before submission. So any errors can be fixed without having to change the implementation :)
-
-Converting .ASM to .MIF using 16_to_32_conversion.py File:
-1) Once the assembly code is ready, open 16_to_32_conversion.py. 
-2) Within this python script, in the main, when it initally opens a python file (line 213), change the directory to where your assembly file is stored. This must be the absolute path. Only forward slashes (/) are alllowed. 
-3) Then, run the python code and a .mif file is generated. 
-4) Copy this .mif file and overwrite the .mif located in output.mif so that it is initialised in the program memory. 
+use the command `./mrasm.exe program.asm` this command will output the appropriate .mif and a program.mif which will appear in `vhdl-src`
 
 ### Updating MIF file without having to recompile on Quartus Prime 18.1
 
-**From the instruction above, you can write your own assembly code based off the given instruction set. Use our assembler to generate the .MIF file, and load the updated MIF file (which consists of the updated instructions) without having to recompile the whole FPGA. The instructions to do so are as follows:**
+Since the instructions above allows you to write your own assembly code based off the provided instructions below, the .mif file that is generated can also be updated for the Quartus project without needing to be recompiled. The instructions for this are here:
+
+To update the .mif file
 
 Go to:
 
-Processing -> Update Memory Initialization File as show below in the image
+Processing -> Update Memory Initialization File
 
-![alt text](../assets/image_28.png)
+If this fails, then go into
 
-Upon success (show in image below), double click on Assembler and Program Device to load the new MIF file on the FPGA
+Project > Add/Remove Files in Project
 
-![alt text](../assets/image_29.png)
+Select `program.mif` and click the remove button on the right
 
+Go to the 3 dots, again, 
 
-Once that has been done, re-program the FPGA
+Navigate to: COMPSYS701/vhdl-src
 
-![alt text](../assets/image_18.png)
+select program.mif (This one should be the new program.mif)
+
+Attempt to update the .mif again
+
+Processing -> Update Memory Initialization File
+
+Once that has been done, re-program the FPGA using the same method as  earlier
