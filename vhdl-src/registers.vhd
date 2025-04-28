@@ -13,28 +13,28 @@ entity registers is
     port (
 		clk : in bit_1;
 		reset : in bit_1;
-		dpcr: out bit_32;
+		dpcr: out bit_32 := X"00000000";
 		r7 : in bit_16;
 		rx : in bit_16;
 		ir_operand : in bit_16;
 		dpcr_lsb_sel : in bit_1;
 		dpcr_wr : in bit_1;
 		-- environment ready and set and clear signals
-		er: out bit_1;
+		er: out bit_1 := '0';
 		er_wr : in bit_1;
 		er_clr : in bit_1;
 		-- end of thread and set and clear signals
-		eot: out bit_1;
+		eot: out bit_1 := '0';
 		eot_wr : in bit_1;
 		eot_clr : in bit_1;
 		-- svop and write enable signal
-		svop : out bit_16;
+		svop : out bit_16 := X"0000";
 		svop_wr : in bit_1;
 		-- sip souce and registered outputs
-		sip_r : out bit_16;
+		sip_r : out bit_16 := X"0000";
 		sip : in bit_16;
 		-- sop and write enable signal
-		sop : out bit_16;
+		sop : out bit_16 := X"0000";
 		sop_wr : in bit_1;
 		-- dprr, irq (dprr(1)) set and clear signals and result source and write enable signal
 		dprr :out bit_2;
@@ -53,7 +53,7 @@ architecture beh of registers is
 	begin
 		if reset = '1' then
 			dpcr <= X"00000000";
-		elsif rising_edge(clk) then 
+		elsif falling_edge(clk) then 
 			if dpcr_wr = '1' then
 				-- write to dpcr. lower byte depends on select signal
 				case dpcr_lsb_sel is
@@ -72,7 +72,7 @@ architecture beh of registers is
 	begin
 		if reset = '1' then
 			er <= '0';
-		elsif rising_edge(clk) then 
+		elsif falling_edge(clk) then 
 			-- set or clear er
 			if er_wr = '1' then
 				er <= '1';
@@ -87,7 +87,7 @@ architecture beh of registers is
 	begin
 		if reset = '1' then
 			eot <= '0';
-		elsif rising_edge(clk) then 
+		elsif falling_edge(clk) then 
 			-- set or clear eot
 			if eot_wr = '1' then
 				eot <= '1';
@@ -102,7 +102,7 @@ architecture beh of registers is
 	begin
 		if reset = '1' then
 			svop <= X"0000";
-		elsif rising_edge(clk) then 
+		elsif falling_edge(clk) then 
 			if svop_wr = '1' then
 				-- write Rx into SVOP upon write signal 
 				svop <= rx;
@@ -126,7 +126,7 @@ architecture beh of registers is
 	begin
 		if reset = '1' then
 			sop <= X"0000";
-		elsif rising_edge(clk) then 
+		elsif falling_edge(clk) then 
 			if sop_wr = '1' then
 				-- write Rx into SOP upon write signal 
 				sop <= rx;
@@ -139,7 +139,7 @@ architecture beh of registers is
 	begin
 		if reset = '1' then
 			dprr(0) <= '0';
-		elsif rising_edge(clk) then 
+		elsif falling_edge(clk) then 
 			if result_wen = '1' then
 				-- write result upon write signal 
 				dprr(0) <= result;
@@ -151,7 +151,7 @@ architecture beh of registers is
 	begin
 		if reset = '1' then
 			dprr(1) <= '1';
-		elsif rising_edge(clk) then 
+		elsif falling_edge(clk) then 
 			-- set or clear irq according to control signal
 			if irq_wr = '1' then
 				dprr(1) <= '1';

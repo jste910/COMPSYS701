@@ -40,7 +40,7 @@ END regfile;
 
 ARCHITECTURE beh OF regfile IS
 	TYPE reg_array IS ARRAY (15 DOWNTO 0) OF bit_16;
-	SIGNAL regs : reg_array;
+	SIGNAL regs : reg_array := (OTHERS => (OTHERS => '0'));
 	SIGNAL data_input_z : bit_16;
 BEGIN
 	r7 <= regs(7);
@@ -70,7 +70,7 @@ BEGIN
 	BEGIN
 		IF init = '1' THEN
 			regs <= ((OTHERS => '0'), (OTHERS => '0'), (OTHERS => '0'), (OTHERS => '0'), (OTHERS => '0'), (OTHERS => '0'), (OTHERS => '0'), (OTHERS => '0'), (OTHERS => '0'), (OTHERS => '0'), (OTHERS => '0'), (OTHERS => '0'), (OTHERS => '0'), (OTHERS => '0'), (OTHERS => '0'), (OTHERS => '0'));
-		ELSIF rising_edge(clk) THEN
+		ELSIF falling_edge(clk) THEN
 			-- write data into Rz if ld signal is asserted
 			IF ld_r = '1' THEN
 				regs(to_integer(unsigned(sel_z))) <= data_input_z;

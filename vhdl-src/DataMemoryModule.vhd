@@ -33,11 +33,12 @@ ARCHITECTURE behavior OF DataMemoryModule IS
     END COMPONENT;
 
     SIGNAL dataLine : STD_LOGIC_VECTOR(15 DOWNTO 0); -- Data line for data memory
+    SIGNAL addressLine : STD_LOGIC_VECTOR(15 DOWNTO 0);
 
 BEGIN
     data_mem_inst : data_mem
     PORT MAP(
-        address => dataLine(11 DOWNTO 0), -- I don't get this
+        address => addressLine(11 DOWNTO 0), -- I don't get this
         clock => DM_CLK, -- Clock input
         data => dataLine, -- Data input (not sure what should be going here)
         wren => DM_STORE, -- Write enable signal (not sure what should be going here)
@@ -48,13 +49,13 @@ BEGIN
     BEGIN
         CASE Address_SEL IS
             WHEN "00" => -- Address selection for PC
-                dataLine <= Immediate;
+                addressLine <= Immediate;
             WHEN "01" => -- Address selection for Rz
-                dataLine <= Rz;
+                addressLine <= Rz;
             WHEN "10" => -- Address selection for Rx
-                dataLine <= Rx;
+                addressLine <= Rx;
             WHEN OTHERS => -- Default case
-                dataLine <= (OTHERS => '0'); -- Set to zero or some default value
+                addressLine <= (OTHERS => '0'); -- Set to zero or some default value
         END CASE;
         CASE Data_SEL IS
             WHEN "00" => -- Data selection for Immediate

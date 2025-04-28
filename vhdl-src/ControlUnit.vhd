@@ -285,6 +285,12 @@ BEGIN
                         END IF;
                     ELSIF (OP_Code = ldr) THEN
                         Reg_Select <= "011";
+                        Reg_Store <= '1';
+                        IF (AM = am_register) THEN
+                            Address_Select <= "10";
+                        ELSE
+                            Address_Select <= "00";
+                        END IF;
                     ELSE
                         Reg_Store <= '1';
                         IF (AM = am_immediate) THEN

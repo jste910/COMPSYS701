@@ -13,7 +13,7 @@ use work.various_constants.all;
 entity alu is
 	port (
 		clk				: in bit_1;
-		z_flag			: out bit_1;
+		z_flag			: out bit_1 := '0';
 		-- ALU operation selection
 		alu_operation	: in bit_3;
 		-- operand selection
@@ -93,7 +93,7 @@ begin
 	begin
 		if reset = '1' then
 			z_flag <= '0';
-		elsif rising_edge(clk) then
+		elsif falling_edge(clk) then
 			if clr_z_flag = '1' then
 				z_flag <= '0';
 			-- if alu is working (operation is valid)
