@@ -10,30 +10,46 @@ USE IEEE.numeric_std.ALL;
 USE work.recop_types.ALL;
 USE work.various_constants.ALL;
 ENTITY datapath IS
-    -- no io?
+    PORT (
+        -- IO only for test benching and clock
+        -- Test bench outputs
+        PROGRAM_COUNTER_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+        RZ_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+        RX_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+        R7_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+        IMMEDIATE_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+        INSTRUCTION_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+        ALU_OUTPUT_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+        DATAM_OUT_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+        SIP_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+        ER_output : OUT STD_LOGIC;
+        -- Input signalsj 
+        SIGNAL INPUT_CLK : STD_LOGIC
+    );
+
 END ENTITY datapath;
 ARCHITECTURE behavior OF datapath IS
 
     COMPONENT ProgramCounter
         PORT (
-            Rx             : IN  STD_LOGIC_VECTOR(15 DOWNTO 0); -- 16-bit input a
-            Immediate      : IN  STD_LOGIC_VECTOR(15 DOWNTO 0); -- 16-bit input b
-            PC_SEL         : IN  STD_LOGIC_VECTOR(1 DOWNTO 0);  -- Selector
-            PC_SET         : IN  STD_LOGIC;                     -- Latch the value
-            CLK            : IN  STD_LOGIC;                     -- Clock signal
-            PC             : OUT STD_LOGIC_VECTOR(15 DOWNTO 0)  -- 16-bit output
+            Rx : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- 16-bit input a
+            Immediate : IN STD_LOGIC_VECTOR(15 DOWNTO 0); -- 16-bit input b
+            PC_SEL : IN STD_LOGIC_VECTOR(1 DOWNTO 0); -- Selector
+            PC_SET : IN STD_LOGIC; -- Latch the value
+            CLK : IN STD_LOGIC; -- Clock signal
+            PC : OUT STD_LOGIC_VECTOR(15 DOWNTO 0) -- 16-bit output
         );
     END COMPONENT;
 
     COMPONENT program_mem_module
-        port (
-            clk					: in  std_logic;
-            rst					: in  std_logic;
-            address				: in  std_logic_vector(14 downto 0);
-            IM_Store			: in  std_logic;
-            IR_Load				: in  std_logic;
-            immediate_reg		: out std_logic_vector(15 downto 0);
-            instr_header_reg	: out std_logic_vector(15 downto 0)
+        PORT (
+            clk : IN STD_LOGIC;
+            rst : IN STD_LOGIC;
+            address : IN STD_LOGIC_VECTOR(14 DOWNTO 0);
+            IM_Store : IN STD_LOGIC;
+            IR_Load : IN STD_LOGIC;
+            immediate_reg : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+            instr_header_reg : OUT STD_LOGIC_VECTOR(15 DOWNTO 0)
         );
     END COMPONENT;
 
@@ -42,6 +58,7 @@ ARCHITECTURE behavior OF datapath IS
             -- INPUTS
             CLK : IN STD_LOGIC;
             CMP0 : IN STD_LOGIC;
+            Reset : IN STD_LOGIC;
             OP_Code : IN STD_LOGIC_VECTOR(5 DOWNTO 0);
             AM : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
             Z_Flag : IN STD_LOGIC;
@@ -62,10 +79,9 @@ ARCHITECTURE behavior OF datapath IS
             Reg_Store : OUT STD_LOGIC;
             ALU_OP : OUT STD_LOGIC_VECTOR(2 DOWNTO 0);
             DM_LOAD : OUT STD_LOGIC;
-            DM_STORE : OUT STD_LOGIC; 
+            DM_STORE : OUT STD_LOGIC;
 
             -- OUTPUTS IO / REG CONTROL
-            Init : OUT STD_LOGIC;
             DPCR_Store : OUT STD_LOGIC;
             Z_Clear : OUT STD_LOGIC;
             ER_Clear : OUT STD_LOGIC;
@@ -76,7 +92,7 @@ ARCHITECTURE behavior OF datapath IS
         );
     END COMPONENT;
 
-    COMPONENT regfile 
+    COMPONENT regfile
         PORT (
             clk : IN bit_1;
             init : IN bit_1;
@@ -135,39 +151,39 @@ ARCHITECTURE behavior OF datapath IS
     END COMPONENT;
 
     COMPONENT Registers
-        port (
-            clk : in bit_1;
-            reset : in bit_1;
-            dpcr: out bit_32;
-            r7 : in bit_16;
-            rx : in bit_16;
-            ir_operand : in bit_16;
-            dpcr_lsb_sel : in bit_1;
-            dpcr_wr : in bit_1;
+        PORT (
+            clk : IN bit_1;
+            reset : IN bit_1;
+            dpcr : OUT bit_32;
+            r7 : IN bit_16;
+            rx : IN bit_16;
+            ir_operand : IN bit_16;
+            dpcr_lsb_sel : IN bit_1;
+            dpcr_wr : IN bit_1;
             -- environment ready and set and clear signals
-            er: out bit_1;
-            er_wr : in bit_1;
-            er_clr : in bit_1;
+            er : OUT bit_1;
+            er_wr : IN bit_1;
+            er_clr : IN bit_1;
             -- end of thread and set and clear signals
-            eot: out bit_1;
-            eot_wr : in bit_1;
-            eot_clr : in bit_1;
+            eot : OUT bit_1;
+            eot_wr : IN bit_1;
+            eot_clr : IN bit_1;
             -- svop and write enable signal
-            svop : out bit_16;
-            svop_wr : in bit_1;
+            svop : OUT bit_16;
+            svop_wr : IN bit_1;
             -- sip souce and registered outputs
-            sip_r : out bit_16;
-            sip : in bit_16;
+            sip_r : OUT bit_16;
+            sip : IN bit_16;
             -- sop and write enable signal
-            sop : out bit_16;
-            sop_wr : in bit_1;
+            sop : OUT bit_16;
+            sop_wr : IN bit_1;
             -- dprr, irq (dprr(1)) set and clear signals and result source and write enable signal
-            dprr :out bit_2;
-            irq_wr:in bit_1;
-            irq_clr:in bit_1;
-            result_wen: in bit_1;
-            result :in bit_1
-            );
+            dprr : OUT bit_2;
+            irq_wr : IN bit_1;
+            irq_clr : IN bit_1;
+            result_wen : IN bit_1;
+            result : IN bit_1
+        );
     END COMPONENT;
 
     COMPONENT DataMemoryModule
@@ -194,11 +210,9 @@ ARCHITECTURE behavior OF datapath IS
     END COMPONENT;
 
     -- OVERALL SIGNALS
-    SIGNAL INPUT_CLK : STD_LOGIC;
     SIGNAL PROCESSOR_CLK : STD_LOGIC;
     SIGNAL RESET : STD_LOGIC;
-    SIGNAL INIT : STD_LOGIC := '1';
-    
+
     -- DATA SIGNALS
     SIGNAL PROGRAM_COUNTER : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
     SIGNAL RZ : STD_LOGIC_VECTOR(15 DOWNTO 0);
@@ -208,7 +222,7 @@ ARCHITECTURE behavior OF datapath IS
     SIGNAL INSTRUCTION : STD_LOGIC_VECTOR(15 DOWNTO 0);
     SIGNAL ALU_OUTPUT : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
     SIGNAL DATAM_OUT : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
-    SIGNAL SIP : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000"; 
+    SIGNAL SIP : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
     SIGNAL ER : STD_LOGIC := '0';
 
     -- MEMORY CONTROL SIGNALS
@@ -240,22 +254,30 @@ ARCHITECTURE behavior OF datapath IS
     SIGNAL DPCR_SELECT : STD_LOGIC;
     SIGNAL REGISTER_SELECT : STD_LOGIC_VECTOR(2 DOWNTO 0) := "000";
     SIGNAL REGISTER_STORE : STD_LOGIC;
-    SIGNAL REGFILE_INIT : STD_LOGIC := '1';
 
     -- OTHER CONTROL SIGNALS    
     SIGNAL COMPARE_OUTPUT : STD_LOGIC;
- 
 BEGIN
-    REGFILE_INIT <= RESET OR INIT;
+    --UPDATE test bench signals
+    PROGRAM_COUNTER_output <= PROGRAM_COUNTER;
+    RZ_output <= RZ;
+    RX_output <= RX;
+    R7_output <= R7;
+    IMMEDIATE_output <= IMMEDIATE;
+    INSTRUCTION_output <= INSTRUCTION;
+    ALU_OUTPUT_output <= ALU_OUTPUT;
+    DATAM_OUT_output <= DATAM_OUT;
+    SIP_output <= SIP;
+    ER_output <= ER;
 
     PC : ProgramCounter
     PORT MAP(
         Rx => RX,
-        Immediate => IMMEDIATE, 
+        Immediate => IMMEDIATE,
         PC_SEL => PROGRAM_SELECT,
         PC_SET => PROGRAM_SET,
         CLK => PROCESSOR_CLK,
-        PC => PROGRAM_COUNTER 
+        PC => PROGRAM_COUNTER
     );
 
     IM : program_mem_module
@@ -295,22 +317,22 @@ BEGIN
         ALU_OP => ALU_OPERATION,
         DM_LOAD => DATAM_LOAD,
         DM_STORE => DATAM_STORE,
-        
+
         -- OUTPUTS IO / REG CONTROL
-        Init => INIT,
         DPCR_Store => DPCR_WRITE,
         Z_Clear => CLR_Z_FLAG,
         ER_Clear => ER_CLEAR,
         EOT_Clear => EOT_CLEAR,
         EOT_Set => EOT_SET,
         SVOP_Set => SVOP_SET,
-        SOP_Set => SOP_SET
+        SOP_Set => SOP_SET,
+        RESET => '0'
     );
 
-    REGF: regfile
+    REGF : regfile
     PORT MAP(
         clk => PROCESSOR_CLK,
-        init => REGFILE_INIT,
+        init => RESET,
         ld_r => REGISTER_STORE,
         sel_z => INSTRUCTION(7 DOWNTO 4),
         sel_x => INSTRUCTION(3 DOWNTO 0),
@@ -386,10 +408,10 @@ BEGIN
         sip_r => SIP,
         -- DPRR / IRQ <! The 5 signals below are needed to be implemented>
         dprr => OPEN,
-		irq_wr=> '0',
-		irq_clr=>'0',
-		result_wen=>'0',
-		result =>'0'
+        irq_wr => '0',
+        irq_clr => '0',
+        result_wen => '0',
+        result => '0'
     );
 
     DMM : DataMemoryModule

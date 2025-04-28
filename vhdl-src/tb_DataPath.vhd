@@ -1,70 +1,61 @@
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 
-ENTITY datapath_tb IS
-END ENTITY datapath_tb;
+ENTITY tb_datapath IS
+END ENTITY tb_datapath;
 
-ARCHITECTURE behavior OF datapath_tb IS
+ARCHITECTURE behavior OF tb_datapath IS
 
     -- Component Declaration for the Unit Under Test (UUT)
     COMPONENT datapath
-    PORT (
-        INPUT_CLK       : IN  STD_LOGIC;
-        PROCESSOR_CLK   : OUT STD_LOGIC;
-        RESET           : IN  STD_LOGIC;
-        INIT            : IN  STD_LOGIC := '1';
-        
-        -- Exposed data signals for monitoring
-        PROGRAM_COUNTER : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        RZ              : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        RX              : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        R7              : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        IMMEDIATE       : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        INSTRUCTION     : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        ALU_OUTPUT      : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        DATAM_OUT       : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        SIP             : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        ER              : OUT STD_LOGIC
-    );
+        PORT (
+            PROGRAM_COUNTER_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+            RZ_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+            RX_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+            R7_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+            IMMEDIATE_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+            INSTRUCTION_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+            ALU_OUTPUT_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+            DATAM_OUT_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+            SIP_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+            ER_output : OUT STD_LOGIC;
+            -- Input signalsj 
+            SIGNAL INPUT_CLK : STD_LOGIC
+        );
     END COMPONENT;
 
     -- Testbench signals
-    SIGNAL INPUT_CLK       : STD_LOGIC := '0';
-    SIGNAL PROCESSOR_CLK   : STD_LOGIC;
-    SIGNAL RESET           : STD_LOGIC := '0';
-    SIGNAL INIT            : STD_LOGIC := '1';
-    
+    SIGNAL INPUT_CLK : STD_LOGIC := '0';
     -- Exposed data signals
-    SIGNAL PROGRAM_COUNTER : STD_LOGIC_VECTOR(15 DOWNTO 0);
-    SIGNAL RZ              : STD_LOGIC_VECTOR(15 DOWNTO 0);
-    SIGNAL RX              : STD_LOGIC_VECTOR(15 DOWNTO 0);
-    SIGNAL R7              : STD_LOGIC_VECTOR(15 DOWNTO 0);
-    SIGNAL IMMEDIATE       : STD_LOGIC_VECTOR(15 DOWNTO 0);
-    SIGNAL INSTRUCTION     : STD_LOGIC_VECTOR(15 DOWNTO 0);
-    SIGNAL ALU_OUTPUT      : STD_LOGIC_VECTOR(15 DOWNTO 0);
-    SIGNAL DATAM_OUT       : STD_LOGIC_VECTOR(15 DOWNTO 0);
-    SIGNAL SIP             : STD_LOGIC_VECTOR(15 DOWNTO 0);
-    SIGNAL ER              : STD_LOGIC;
+    SIGNAL PROGRAM_COUNTER_output : STD_LOGIC_VECTOR(15 DOWNTO 0);
+    SIGNAL RZ_output : STD_LOGIC_VECTOR(15 DOWNTO 0);
+    SIGNAL RX_output : STD_LOGIC_VECTOR(15 DOWNTO 0);
+    SIGNAL R7_output : STD_LOGIC_VECTOR(15 DOWNTO 0);
+    SIGNAL IMMEDIATE_output : STD_LOGIC_VECTOR(15 DOWNTO 0);
+    SIGNAL INSTRUCTION_output : STD_LOGIC_VECTOR(15 DOWNTO 0);
+    SIGNAL ALU_OUTPUT_output : STD_LOGIC_VECTOR(15 DOWNTO 0);
+    SIGNAL DATAM_OUT_output : STD_LOGIC_VECTOR(15 DOWNTO 0);
+    SIGNAL SIP_output : STD_LOGIC_VECTOR(15 DOWNTO 0);
+    SIGNAL ER_output : STD_LOGIC;
 
 BEGIN
 
     -- Instantiate the Unit Under Test (UUT)
-    uut: datapath
-    PORT MAP (
-        INPUT_CLK       => INPUT_CLK,
-        PROCESSOR_CLK   => PROCESSOR_CLK,
-        RESET           => RESET,
-        INIT            => INIT,
-        PROGRAM_COUNTER => PROGRAM_COUNTER,
-        RZ              => RZ,
-        RX              => RX,
-        R7              => R7,
-        IMMEDIATE       => IMMEDIATE,
-        INSTRUCTION     => INSTRUCTION,
-        ALU_OUTPUT      => ALU_OUTPUT,
-        DATAM_OUT       => DATAM_OUT,
-        SIP             => SIP,
-        ER              => ER
+    uut : datapath
+    PORT MAP(
+        PROGRAM_COUNTER_output => PROGRAM_COUNTER_output,
+        RZ_output => RZ_output,
+
+        RX_output => RX_output,
+        R7_output => R7_output,
+        IMMEDIATE_output => IMMEDIATE_output,-- : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+        INSTRUCTION_output => INSTRUCTION_output, -- OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+        ALU_OUTPUT_output => ALU_OUTPUT_output, --  OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+        DATAM_OUT_output => DATAM_OUT_output, -- : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+        SIP_output => SIP_output, --: OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+        ER_output => ER_output, --: OUT STD_LOGIC;
+        INPUT_CLK => INPUT_CLK
+
     );
 
     -- Clock generation process

@@ -37,7 +37,6 @@ ENTITY ControlUnit IS
         DM_STORE : OUT STD_LOGIC;
 
         -- OUTPUTS IO / REG CONTROL
-        Init : OUT STD_LOGIC; 
         DPCR_Store : OUT STD_LOGIC;
         Z_Clear : OUT STD_LOGIC;
         ER_Clear : OUT STD_LOGIC;
@@ -76,7 +75,6 @@ BEGIN
             
             DM_LOAD <= '0';
             DM_STORE <= '0';
-            Init <= '0';
             DPCR_Store <= '0';
             Z_Clear <= '0';
             ER_Clear <= '0';
@@ -88,7 +86,6 @@ BEGIN
             CASE FSM_STATE IS
                 WHEN "000" =>
                     -- Inital state
-                    Init <= '1';
                     FSM_STATE <= "001";
 
                 WHEN "001" =>

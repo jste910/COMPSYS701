@@ -25,4 +25,6 @@
 !vhdl-src/**/*.sof
 !vhdl-src/**/*.tcl
 !vhdl-src/**/class.ptf
+!vhdl-src/**/*.mif
+
 
