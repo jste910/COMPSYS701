@@ -240,11 +240,13 @@ ARCHITECTURE behavior OF datapath IS
     SIGNAL DPCR_SELECT : STD_LOGIC;
     SIGNAL REGISTER_SELECT : STD_LOGIC_VECTOR(2 DOWNTO 0) := "000";
     SIGNAL REGISTER_STORE : STD_LOGIC;
+    SIGNAL REGFILE_INIT : STD_LOGIC := '1';
 
     -- OTHER CONTROL SIGNALS    
     SIGNAL COMPARE_OUTPUT : STD_LOGIC;
  
 BEGIN
+    REGFILE_INIT <= RESET OR INIT;
 
     PC : ProgramCounter
     PORT MAP(
@@ -308,7 +310,7 @@ BEGIN
     REGF: regfile
     PORT MAP(
         clk => PROCESSOR_CLK,
-        init => RESET OR INIT,
+        init => REGFILE_INIT,
         ld_r => REGISTER_STORE,
         sel_z => INSTRUCTION(7 DOWNTO 4),
         sel_x => INSTRUCTION(3 DOWNTO 0),
@@ -407,8 +409,8 @@ BEGIN
     CLOCK : recop_pll
     PORT MAP
     (
-        inclk0 => INPUT_CLK, -- Should be like 50Mhz
-        c0 => OPEN -- PROCESSOR_CLK
+        inclk0 => INPUT_CLK,
+        c0 => PROCESSOR_CLK
     );
 
 END behavior;
