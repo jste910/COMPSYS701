@@ -212,6 +212,7 @@ ARCHITECTURE behavior OF datapath IS
     -- OVERALL SIGNALS
     SIGNAL PROCESSOR_CLK : STD_LOGIC;
     SIGNAL RESET : STD_LOGIC;
+	 SIGNAL CLOCK_50 : STD_LOGIC;
 
     -- DATA SIGNALS
     SIGNAL PROGRAM_COUNTER : STD_LOGIC_VECTOR(15 DOWNTO 0) := "0000000000000000";
@@ -257,6 +258,14 @@ ARCHITECTURE behavior OF datapath IS
 
     -- OTHER CONTROL SIGNALS    
     SIGNAL COMPARE_OUTPUT : STD_LOGIC;
+	 
+	 -- IO SIGNALS
+	 SIGNAL T_LEDR : STD_LOGIC_VECTOR(16 DOWNTO 0);
+	 SIGNAL LEDR : STD_LOGIC_VECTOR(9 DOWNTO 0);
+	 
+	 SIGNAL T_SW : STD_LOGIC_VECTOR(16 DOWNTO 0);
+	 SIGNAL SW : STD_LOGIC_VECTOR(9 DOWNTO 0);
+	 
 BEGIN
     --UPDATE test bench signals
     PROGRAM_COUNTER_output <= PROGRAM_COUNTER;
@@ -401,10 +410,10 @@ BEGIN
         svop => OPEN, -- add mapping to 7seg
         svop_wr => SVOP_SET,
         -- SOP
-        sop => OPEN, -- add mapping to LEDs
+        sop => T_LEDR, -- add mapping to LEDs
         sop_wr => SOP_SET,
         -- SIP
-        sip => X"0000", -- Need to map to switchs
+        sip => T_SW, -- Need to map to switchs
         sip_r => SIP,
         -- DPRR / IRQ <! The 5 signals below are needed to be implemented>
         dprr => OPEN,
@@ -431,8 +440,11 @@ BEGIN
     CLOCK : recop_pll
     PORT MAP
     (
-        inclk0 => INPUT_CLK,
+        inclk0 => CLOCK_50,
         c0 => PROCESSOR_CLK
     );
+	 
+	 LEDR <= T_LEDR(9 DOWNTO 0);
+	 T_SW <= "000000" & SW;
 
 END behavior;
