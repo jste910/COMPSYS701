@@ -28,28 +28,28 @@ architecture rtl of program_mem_module is
 			q		: out std_logic_vector(15 downto 0)
 		);
 	end component;
-
+	SIGNAL notCLK :std_logic := '0';
 begin
-
+	notCLK <= NOT clk;
 	-- Instantiate ROM
 	prog_mem_inst : prog_mem
 		port map (
 			address => address,
-			clock	=> clk,
-			q		=> rom_data
+			q		=> rom_data,
+			clock	=> clk
 		);
 
 	-- Register loading logic
-	process(clk, rst)
+	process(clk, rst, rom_data)
 	begin
 		if rst = '1' then
 			immediate_reg_int		<= (others => '0');
 			instr_header_reg_int	<= (others => '0');
-		elsif rising_edge(clk) then
+		elsif falling_edge(clk) then
 			if IM_Store = '1' then
 				immediate_reg_int <= rom_data;
 			end if;
-
+			
 			if IR_Load = '1' then
 				instr_header_reg_int <= rom_data;
 			end if;
