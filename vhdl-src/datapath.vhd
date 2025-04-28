@@ -10,22 +10,6 @@ USE IEEE.numeric_std.ALL;
 USE work.recop_types.ALL;
 USE work.various_constants.ALL;
 ENTITY datapath IS
-    PORT (
-        -- IO only for test benching and clock
-        -- Test bench outputs
-        PROGRAM_COUNTER_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        RZ_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        RX_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        R7_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        IMMEDIATE_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        INSTRUCTION_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        ALU_OUTPUT_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        DATAM_OUT_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        SIP_output : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        ER_output : OUT STD_LOGIC;
-        -- Input signalsj 
-        SIGNAL INPUT_CLK : STD_LOGIC
-    );
 
 END ENTITY datapath;
 ARCHITECTURE behavior OF datapath IS
@@ -267,17 +251,6 @@ ARCHITECTURE behavior OF datapath IS
 	 SIGNAL SW : STD_LOGIC_VECTOR(9 DOWNTO 0);
 	 
 BEGIN
-    --UPDATE test bench signals
-    PROGRAM_COUNTER_output <= PROGRAM_COUNTER;
-    RZ_output <= RZ;
-    RX_output <= RX;
-    R7_output <= R7;
-    IMMEDIATE_output <= IMMEDIATE;
-    INSTRUCTION_output <= INSTRUCTION;
-    ALU_OUTPUT_output <= ALU_OUTPUT;
-    DATAM_OUT_output <= DATAM_OUT;
-    SIP_output <= SIP;
-    ER_output <= ER;
 
     PC : ProgramCounter
     PORT MAP(
