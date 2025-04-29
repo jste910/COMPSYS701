@@ -3,7 +3,7 @@
 ### 1. Open Quartus Prime 18.1
 Open the provided project based on your dev board by going to file > Open Project 
 
-![alt text](image-27.png)
+![alt text](../media/image-27.png)
 
 In the file explorer that opens up open the folder for your specific dev board and then select the `.qpf` file in there. 
 
@@ -15,7 +15,7 @@ Click `Open`
 ## Compile Design
 Compile the design by clicking the Blue Triangle at the top or press `Ctrl + L` on your keyboard
 
-![alt text](image-26.png)
+![alt text](../media/image-26.png)
 
 This process should take a little bit of time
 
@@ -25,47 +25,47 @@ If there are pin assignment errors you may need to import pin assignments. If no
 
 To import the pin assignments go to Assignments > Import Assignments
 
-![alt text](image-23.png)
+![alt text](../media/image-23.png)
 
 Select the 3 dots and find the proper pin assignment file for your board. It will either be `DE1_Soc.qsf` for a DE1 board and `RECOP-DE2.qsf` 
 
-![alt text](image-24.png)
+![alt text](../media/image-24.png)
 
 click `ok`
 
-![alt text](image-25.png)
+![alt text](../media/image-25.png)
 
 ## Programming FPGA
 
 Open the programmer (Blue square icon with a rainbow coming out)
 
-![alt text](image.png)
+![alt text](../media/image.png)
 
 Select `Hardware Setup`
-![alt text](image-1.png)
+![alt text](../media/image-1.png)
 
 Make sure that the correct FPGA is selected 
 
 Press `Close`
 
-![alt text](image-2.png)
+![alt text](../media/image-2.png)
 
 Select all existing configurations and delete them 
 
-![alt text](image-3.png)
+![alt text](../media/image-3.png)
 
 Click auto detect and select the *5CSEMA5* as the device in the popup.
 
-![alt text](image-4.png)
+![alt text](../media/image-4.png)
 
 Select the "file" field of the second option in this menue and use the file explorer to navigate to and select the `.sof` file. In our case it should be in the `output` folder. 
 
-![alt text](image-5.png)
+![alt text](../media/image-5.png)
 
 Now simply check the `program/configure` box and click the `start`
-If the board was programmed succesfully then you will see a green box with "100% (Succesful)" in it as depicted in the image below.
+If the board was programmed succesfully then you will see a green box with "100% (Succesful)" in it as depicted in the ../media/image below.
 
-![alt text](image-6.png)
+![alt text](../media/image-6.png)
 The Progress bar should then progress to 100%
 
 If successful, the Board should show signs of life
@@ -93,27 +93,27 @@ Go to:
 
 Processing -> Update Memory Initialization File
 
-![alt text](image-7.png)
+![alt text](../media/image-7.png)
 
 If this fails, then go into
 
 Project > Add/Remove Files in Project
 
-![alt text](image-8.png)
+![alt text](../media/image-8.png)
 
 Select `program.mif` and click the remove button on the right
 
-![alt text](image-10.png)
+![alt text](../media/image-10.png)
 
 
 Use the three dots to open a file explorer to add the `.mif` file again.
 
-![alt text](image-12.png)
+![alt text](../media/image-12.png)
 
 
 select program.mif (This one should be the new program.mif)
 
-![alt text](image-9.png)
+![alt text](../media/image-9.png)
 
 Change file type in the explorer to `Memory Files` if it is not already in that mode.
 
@@ -123,6 +123,6 @@ Attempt to update the .mif again
 
 Processing -> Update Memory Initialization File
 
-![alt text](image-7.png)
+![alt text](../media/image-7.png)
 
 Once that has been done, re-program the FPGA using the same method as  earlier

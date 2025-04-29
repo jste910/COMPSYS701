@@ -5,8 +5,7 @@
 
 Click on File> Change Directory
 
-![alt text](image-13.png)
-
+![alt text](../media/image-13.png)
 Then select the `ModelSim` folder.
 
 Press OK
@@ -16,7 +15,7 @@ Press OK
 Navigate to Compile > Compile
 
 
-![alt text](image-14.png)
+![alt text](../media/image-14.png)
 
 
 **Compile the files in the following order, otherwise you will get errors**
@@ -50,7 +49,7 @@ Navigate to Compile > Compile
 1. tb_DataPath.vhd
 1. tb_ControlUnit.vhd
 
-![alt text](image-15.png)
+![alt text](../media/image-15.png)
 
 This process should create the `work` folder if it is not already present
 
@@ -76,24 +75,24 @@ add wave -position insertpoint sim:/tb_datapath/*
 
 #### Running the simulation
 
-![alt text](image-16.png)
+![alt text](../media/image-16.png)
 
 
 Then use this `+` button to expand the work directory
 
-![alt text](image-17.png)
+![alt text](../media/image-17.png)
 
 Then you may need to scroll down to select the `tb_controlunit` to see the control unit standalone or `tb_datapath` to test the datapath
 
 
 
-![alt text](image-18.png)
+![alt text](../media/image-18.png)
 
 select a signal in the objects window and then use the shortcut `ctrl + A` to select all signals, then press `ctrl + w` to include the signals in our simulation. Alternatively only select the signals you want and then add the with `ctrl + w`.
 
-![alt text](image-19.png)
+![alt text](../media/image-19.png)
 
-![alt text](image-20.png)
+![alt text](../media/image-20.png)
 
 To run the simulation, use the command
 
@@ -102,7 +101,7 @@ where X is the period of simulation (we recommend 1ms)
 
 
 
-![alt text](image-22.png)
+![alt text](../media/image-22.png)
 
 
 Once the simulation has finished, the central portion of the simulation window should be filled with various lines, the output of the program.
