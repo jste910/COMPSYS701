@@ -17,7 +17,7 @@
 !README.md
 !README_FPGA.md
 !README_ModelSim.md
-
+!*.png
 # Include assembler folder and all its contents
 !assembler/
 !assembler/ReCOP-ASM Package/
@@ -39,5 +39,4 @@
 !vhdl-src/**/*.tcl
 !vhdl-src/**/class.ptf
 !vhdl-src/**/*.mif
-
 

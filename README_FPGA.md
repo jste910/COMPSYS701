@@ -1,80 +1,71 @@
 ## Instructions to Run on FPGA
 
-### 1. Open Quartus Prime 18.1 and select New Project Wizard
+### 1. Open Quartus Prime 18.1
+Open the provided project based on your dev board by going to file > Open Project 
 
-Click `next`
+![alt text](image-27.png)
 
-Choose the working idrectory as:
-
-COMPSYS701/Quartus/
-
-Name the project and top level entity with the name `701_Quartus`
-
-Click on next
-
-
-Select Empty Project and click on next
-
-Click on the highlighted 3 dots:
-
-Navigate to:
-COMPSYS701/vhdl-src
-
-and select all the .vhd files
+In the file explorer that opens up open the folder for your specific dev board and then select the `.qpf` file in there. 
 
 Click `Open`
 
-Click on the highlighted 3 dots again
+ This will open the quartus project and you will be able to compile. 
 
-Naviage to COMPSYS701/vhdl-src
 
-select program.mif
+## Compile Design
+Compile the design by clicking the Blue Triangle at the top or press `Ctrl + L` on your keyboard
 
-Click `Open`
+![alt text](image-26.png)
 
-Click `Next`
+This process should take a little bit of time
 
-Select the Device Family appropriately (Either Cyclone IV or Cyclone V)
-
-Find the appropriate board (look online)
-
-Click on `next` until the `next` button can no longer be pushed
-
-Click on Finish
-
-Setting the top level entity:
-
-Go to the project navigator and switch from Hierarchy to Files
-
-In Files, right-click datapath.vhd and select `set as Top-Level entity`
+If there are pin assignment errors you may need to import pin assignments. If not skip to programming the FPGA.
 
 ## Import the pin assignments
 
 To import the pin assignments go to Assignments > Import Assignments
 
-select the 3 dots and find the proper pin assignment file for your board
+![alt text](image-23.png)
+
+Select the 3 dots and find the proper pin assignment file for your board. It will either be `DE1_Soc.qsf` for a DE1 board and `RECOP-DE2.qsf` 
+
+![alt text](image-24.png)
 
 click `ok`
 
-Compile the design by clicking the Blue Triangle at the top or press `Ctrl + L` on your keyboard
+![alt text](image-25.png)
 
-This process should take a little bit of time
-
-Once the compilation is successful
+## Programming FPGA
 
 Open the programmer (Blue square icon with a rainbow coming out)
+
 ![alt text](image.png)
 
 Select `Hardware Setup`
+![alt text](image-1.png)
 
-Make sure that the USB Blaster is selected
+Make sure that the correct FPGA is selected 
 
 Press `Close`
 
-Check the `File` to make sure that the .sof is selected (This should be automatically done by Quartus)
+![alt text](image-2.png)
 
-Press `Start`
+Select all existing configurations and delete them 
 
+![alt text](image-3.png)
+
+Click auto detect and select the *5CSEMA5* as the device in the popup.
+
+![alt text](image-4.png)
+
+Select the "file" field of the second option in this menue and use the file explorer to navigate to and select the `.sof` file. In our case it should be in the `output` folder. 
+
+![alt text](image-5.png)
+
+Now simply check the `program/configure` box and click the `start`
+If the board was programmed succesfully then you will see a green box with "100% (Succesful)" in it as depicted in the image below.
+
+![alt text](image-6.png)
 The Progress bar should then progress to 100%
 
 If successful, the Board should show signs of life
@@ -102,20 +93,36 @@ Go to:
 
 Processing -> Update Memory Initialization File
 
+![alt text](image-7.png)
+
 If this fails, then go into
 
 Project > Add/Remove Files in Project
 
+![alt text](image-8.png)
+
 Select `program.mif` and click the remove button on the right
 
-Go to the 3 dots, again, 
+![alt text](image-10.png)
 
-Navigate to: COMPSYS701/vhdl-src
+
+Use the three dots to open a file explorer to add the `.mif` file again.
+
+![alt text](image-12.png)
+
 
 select program.mif (This one should be the new program.mif)
+
+![alt text](image-9.png)
+
+Change file type in the explorer to `Memory Files` if it is not already in that mode.
+
+Navigate to the correct folder depnding on the FPGA in use and add the `.mif` in. Hit apply  
 
 Attempt to update the .mif again
 
 Processing -> Update Memory Initialization File
+
+![alt text](image-7.png)
 
 Once that has been done, re-program the FPGA using the same method as  earlier

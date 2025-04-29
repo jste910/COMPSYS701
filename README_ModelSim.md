@@ -1,12 +1,13 @@
 ## Instructions to Run on FPGA
 
-### 1. Open ModelSim - Altera 10.1d (Quartus II 13.0)
+### 1. Open ModelSim
 
-Follow the highlighted parts of the image
 
-Click on File> Change Directory and select the following directory:
+Click on File> Change Directory
 
-COMPSYS701
+![alt text](image-13.png)
+
+Then select the `ModelSim` folder.
 
 Press OK
 
@@ -14,9 +15,9 @@ Press OK
 
 Navigate to Compile > Compile
 
-This should bring up a window with several folder options
 
-go into the vhdl-src folder
+![alt text](image-14.png)
+
 
 **Compile the files in the following order, otherwise you will get errors**
 
@@ -49,6 +50,8 @@ go into the vhdl-src folder
 1. tb_DataPath.vhd
 1. tb_ControlUnit.vhd
 
+![alt text](image-15.png)
+
 This process should create the `work` folder if it is not already present
 
 If the compilation is successful, there should be no red lines in the output, if this happens, click `compile` again.
@@ -73,12 +76,37 @@ add wave -position insertpoint sim:/tb_datapath/*
 
 #### Running the simulation
 
+![alt text](image-16.png)
+
+
+Then use this `+` button to expand the work directory
+
+![alt text](image-17.png)
+
+Then you may need to scroll down to select the `tb_controlunit` to see the control unit standalone or `tb_datapath` to test the datapath
+
+
+
+![alt text](image-18.png)
+
+select a signal in the objects window and then use the shortcut `ctrl + A` to select all signals, then press `ctrl + w` to include the signals in our simulation. Alternatively only select the signals you want and then add the with `ctrl + w`.
+
+![alt text](image-19.png)
+
+![alt text](image-20.png)
+
 To run the simulation, use the command
 
-run Xns where X is the period (we recommend 1ms)
+`run Xms` 
+where X is the period of simulation (we recommend 1ms)
+
+
+
+![alt text](image-22.png)
+
 
 Once the simulation has finished, the central portion of the simulation window should be filled with various lines, the output of the program.
 
-The values of each individual signal can be changed in order to fit the user's prefered method of reading binary data (ModelSim supports Radix, Dec, Hex and Binary among others). This can be used to verify that the project is working properly. Note that these are based off `outputmif file`
+The radix of each individual signal can be changed in order to fit the user's prefered method of reading binary data (ModelSim supports Dec, Hex and Binary among others). This can be used to verify that the project is working properly.
 
 If the assembly code was to be changed, follow the instructions in the last section of the README_FPGA.md file
