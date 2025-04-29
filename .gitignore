@@ -10,14 +10,13 @@
 !DE2-FPGA/**
 !ModelSim/
 !ModelSim/**
-
+!.png
 # Keep .gitignore itself
 !.gitignore
 !.md
 !README.md
 !README_FPGA.md
 !README_ModelSim.md
-
 # Include assembler folder and all its contents
 !assembler/
 !assembler/ReCOP-ASM Package/
@@ -39,5 +38,4 @@
 !vhdl-src/**/*.tcl
 !vhdl-src/**/class.ptf
 !vhdl-src/**/*.mif
-
 
