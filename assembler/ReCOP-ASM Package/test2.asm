@@ -1,12 +1,15 @@
 start NOOP ;starting the program
 		LDR R1 #1
+		LDR R8 #1
 		LDR R4 #16 ;16 bits before looping
-count		SUBV R4 R4 #1
+		
+count	SUBV R4 R4 #1
 		NOOP;
 		PRESENT R4 start ;if R4=0 go to start
 		ADD R1 R1 R1 ;”double” the number
-		LDR R0 #0
-		SSOP R0
+		ADD R8 R8 #1
+		SSOP R1
+		SSVOP R8
 		NOOP
 		NOOP
 		NOOP

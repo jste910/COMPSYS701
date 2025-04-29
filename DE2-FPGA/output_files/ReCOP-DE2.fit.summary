@@ -1,0 +1,16 @@
+Fitter Status : Successful - Tue Apr 29 20:01:27 2025
+Quartus Prime Version : 18.1.0 Build 625 09/12/2018 SJ Standard Edition
+Revision Name : ReCOP-DE2
+Top-level Entity Name : datapath
+Family : Cyclone IV E
+Device : EP4CE115F29C7
+Timing Models : Final
+Total logic elements : 958 / 114,480 ( < 1 % )
+    Total combinational functions : 820 / 114,480 ( < 1 % )
+    Dedicated logic registers : 381 / 114,480 ( < 1 % )
+Total registers : 381
+Total pins : 69 / 529 ( 13 % )
+Total virtual pins : 0
+Total memory bits : 589,824 / 3,981,312 ( 15 % )
+Embedded Multiplier 9-bit elements : 0 / 532 ( 0 % )
+Total PLLs : 1 / 4 ( 25 % )
