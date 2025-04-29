@@ -13,7 +13,13 @@ ENTITY datapath IS
 	PORT (
 		CLOCK_50 : IN STD_LOGIC;
 		SW : IN STD_LOGIC_VECTOR(9 DOWNTO 0);
-		LEDR : OUT STD_LOGIC_VECTOR(9 DOWNTO 0)
+		KEY : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
+		
+		LEDR : OUT STD_LOGIC_VECTOR(9 DOWNTO 0);
+		HEX0 : OUT STD_LOGIC_VECTOR(6 DOWNTO 0);
+		HEX1 : OUT STD_LOGIC_VECTOR(6 DOWNTO 0);
+		HEX2 : OUT STD_LOGIC_VECTOR(6 DOWNTO 0);
+		HEX3 : OUT STD_LOGIC_VECTOR(6 DOWNTO 0)
 		
 	);
 END ENTITY datapath;
@@ -248,9 +254,35 @@ ARCHITECTURE behavior OF datapath IS
     -- OTHER CONTROL SIGNALS    
     SIGNAL COMPARE_OUTPUT : STD_LOGIC;
 	 
-	 -- IO SIGNALS
+	-- IO SIGNALS
 	SIGNAL T_LEDR : STD_LOGIC_VECTOR(15 DOWNTO 0); 
 	SIGNAL T_SW : STD_LOGIC_VECTOR(15 DOWNTO 0);
+	SIGNAL SVOP : STD_LOGIC_VECTOR(15 DOWNTO 0);
+	
+	function hex_to_7seg(hex : std_logic_vector(3 downto 0)) return std_logic_vector is
+        variable seg : std_logic_vector(6 downto 0);
+    begin
+        case hex is
+            when "0000" => seg := "1000000"; -- 0
+            when "0001" => seg := "1111001"; -- 1
+            when "0010" => seg := "0100100"; -- 2
+            when "0011" => seg := "0110000"; -- 3
+            when "0100" => seg := "0011001"; -- 4
+            when "0101" => seg := "0010010"; -- 5
+            when "0110" => seg := "0000010"; -- 6
+            when "0111" => seg := "1111000"; -- 7
+            when "1000" => seg := "0000000"; -- 8
+            when "1001" => seg := "0010000"; -- 9
+            when "1010" => seg := "0001000"; -- A
+            when "1011" => seg := "0000011"; -- b
+            when "1100" => seg := "1000110"; -- C
+            when "1101" => seg := "0100001"; -- d
+            when "1110" => seg := "0000110"; -- E
+            when "1111" => seg := "0001110"; -- F
+            when others => seg := "1111111"; -- Blank/off
+        end case;
+        return seg;
+    end function;
 	 
 	 
 BEGIN
@@ -383,7 +415,7 @@ BEGIN
         eot_wr => EOT_SET,
         eot_clr => EOT_CLEAR,
         -- SVOP
-        svop => OPEN, -- add mapping to 7seg
+        svop => SVOP, -- add mapping to 7seg
         svop_wr => SVOP_SET,
         -- SOP
         sop => T_LEDR, -- add mapping to LEDs
@@ -419,7 +451,18 @@ BEGIN
         inclk0 => CLOCK_50,
         c0 => PROCESSOR_CLK
     );
+	
 	 
+	 process(SVOP)
+		begin
+        -- Map to 7-segment display
+        HEX3 <= hex_to_7seg(SVOP(15 downto 12));
+        HEX2 <= hex_to_7seg(SVOP(11 downto 8));
+        HEX1 <= hex_to_7seg(SVOP(7 downto 4));
+        HEX0 <= hex_to_7seg(SVOP(3 downto 0));
+    end process;
+	 
+	 RESET <= NOT KEY(0);
 	 LEDR <= T_LEDR(9 DOWNTO 0);
 	 T_SW <= "000000" & SW;
 

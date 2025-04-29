@@ -1,0 +1,20 @@
+Fitter Status : Successful - Tue Apr 29 20:29:18 2025
+Quartus Prime Version : 18.1.0 Build 625 09/12/2018 SJ Standard Edition
+Revision Name : ReCOP-DE1
+Top-level Entity Name : datapath
+Family : Cyclone V
+Device : 5CSEMA5F31C6
+Timing Models : Final
+Logic utilization (in ALMs) : 374 / 32,070 ( 1 % )
+Total registers : 438
+Total pins : 53 / 457 ( 12 % )
+Total virtual pins : 0
+Total block memory bits : 589,824 / 4,065,280 ( 15 % )
+Total RAM Blocks : 72 / 397 ( 18 % )
+Total DSP Blocks : 0 / 87 ( 0 % )
+Total HSSI RX PCSs : 0
+Total HSSI PMA RX Deserializers : 0
+Total HSSI TX PCSs : 0
+Total HSSI PMA TX Serializers : 0
+Total PLLs : 1 / 6 ( 17 % )
+Total DLLs : 0 / 4 ( 0 % )
