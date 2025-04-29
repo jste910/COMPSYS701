@@ -25,6 +25,7 @@
 
 # Include vhdl-src folder
 !vhdl-src/
+!media/
 !media/**
 
 # Include Quartus/VHDL design files from vhdl-src
