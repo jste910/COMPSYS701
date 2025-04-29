@@ -4,7 +4,7 @@
 # Keep .gitignore itself
 !.gitignore
 !.md
-
+!Submission
 !README.md
 !README_FPGA.md
 !README_ModelSim.md
