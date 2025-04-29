@@ -1,0 +1,14 @@
+Analysis & Synthesis Status : Successful - Tue Apr 29 20:01:11 2025
+Quartus Prime Version : 18.1.0 Build 625 09/12/2018 SJ Standard Edition
+Revision Name : ReCOP-DE2
+Top-level Entity Name : datapath
+Family : Cyclone IV E
+Total logic elements : 1,111
+    Total combinational functions : 820
+    Dedicated logic registers : 381
+Total registers : 381
+Total pins : 69
+Total virtual pins : 0
+Total memory bits : 589,824
+Embedded Multiplier 9-bit elements : 0
+Total PLLs : 1
