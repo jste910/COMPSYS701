@@ -1,10 +1,19 @@
 # Ignore everything by default
 *
 
+# Keep the folders for submissions
+!assembler/Assembler/**
+!DE1-FPGA/
+!DE1-FPGA/**
+
+!DE2-FPGA/
+!DE2-FPGA/**
+!ModelSim/
+!ModelSim/**
+
 # Keep .gitignore itself
 !.gitignore
 !.md
-!Submission
 !README.md
 !README_FPGA.md
 !README_ModelSim.md
