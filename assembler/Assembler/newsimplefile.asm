@@ -13,4 +13,4 @@ start NOOP ;starting the program
         LDR R8 $11
         LDR R9 $12
         NOOP
-ENDPROG
+ENDPROGe
