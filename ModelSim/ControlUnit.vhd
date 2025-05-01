@@ -318,6 +318,21 @@ BEGIN
 
                     FSM_STATE <= "001";
 
+                WHEN "101" =>
+                    -- DATACALL HANDLER
+                    DPRR_Write <= '1';
+                    DPCR_Clear <= '1';
+                    DPRR_IRQ_Clear <= '1';
+                    DPRR_RES_Write <= '0';
+                    -- go back to the decode stage
+                    FSM_STATE <= "010";
+
+                WHEN "110" =>
+                    -- SPINLOCK for blocking datacalls
+                    IF DPRR(0) THEN
+                        FSM_STATE <= "101";
+                    END IF;
+
                 WHEN "111" =>
                     -- HALT
                     -- STOP RIGHT THERE CRIMINAL SCUM YOU HAVE VIOLATED THE LAW!

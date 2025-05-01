@@ -33,7 +33,6 @@ ARCHITECTURE behavior OF datapath IS
             PC_SEL : IN STD_LOGIC_VECTOR(1 DOWNTO 0); -- Selector
             PC_SET : IN STD_LOGIC; -- Latch the value
             CLK : IN STD_LOGIC; -- Clock signal
-            RESET : IN STD_LOGIC;
             PC : OUT STD_LOGIC_VECTOR(15 DOWNTO 0) -- 16-bit output
         );
     END COMPONENT;
@@ -311,7 +310,6 @@ BEGIN
         PC_SEL => PROGRAM_SELECT,
         PC_SET => PROGRAM_SET,
         CLK => PROCESSOR_CLK,
-        RESET => RESET,
         PC => PROGRAM_COUNTER
     );
 
@@ -433,10 +431,10 @@ BEGIN
         dpcr_wr => DPCR_WRITE,
         -- ER
         er => ER,
-        er_wr => NOT KEY(1), -- I dont get why ER has a write signal, I though it was event capture
+        er_wr => '0', -- I dont get why ER has a write signal, I though it was event capture
         er_clr => ER_CLEAR,
         -- EOT
-        eot => OPEN, -- no clue where to pipe this
+        eot => KEY(1), -- no clue where to pipe this
         eot_wr => EOT_SET,
         eot_clr => EOT_CLEAR,
         -- SVOP
@@ -450,10 +448,10 @@ BEGIN
         sip_r => SIP,
         -- DPRR / IRQ <! The 5 signals below are needed to be implemented>
         dprr => DPRR,
-        irq_wr => NOT KEY(3),
+        irq_wr => KEY(3),
         irq_clr => DPRR_IRQ_CLEAR,
         result_wen => DPRR_RES_WRITE,
-        result => KEY(2)
+        result => KEY[(2)
     );
 
     DMM : DataMemoryModule
