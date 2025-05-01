@@ -1,29 +1,52 @@
-start NOOP ;starting the program
-        LDR R0 #0
-		LDR R1 #1
-        LDR R3 #2989
-        LDR R5 #4077
-		LDR R4 #4096 ; bits before looping
-		
-count	SUBV R4 R4 #1
-        NOOP;
-		PRESENT R4 start;if R4=0 go to start
-		SSVOP R4
-		NOOP
-        DATACALL R4; Nonblocking call
-		PRESENT R0 trig;
-		NOOP
-		LDR R2 #65535 ;max register size, 16 bits
+start 	
+	NOOP 
 
-time	SUBV R2 R2 #1
-		PRESENT R2 count ;if R2=0 go to count
-		JMP time
+up_count_init
+	CER
+	LDR R1 #0
+	LDR R2 #16
+	LSIP R3
+	PRESENT R3 up_count_body
+	OR R2 R3 #0
 
-trig    SSVOP R3
-        DATACALL R3 #0; should be a blocking call
-        SSVOP R5
-        
+up_count_body
+	SUBV R2 R2 #1
+	PRESENT R2 up_count_init
+	SSVOP R1
+	ADD R1 R1 #1
+	LDR R4 #64
 
+timer1_outer
+	SUBV R4 R4 #1
+	PRESENT R4 up_count_body
+	LDR R5 #65535
 
+timer1_inner
+	SUBV R5 R5 #1
+	PRESENT R5 timer1_outer
+	JMP timer1_inner
+
+down_count_init
+	CER
+	LDR R8 #23
+	LSIP R9
+	PRESENT R9 down_count_body
+	OR R8 R9 #0
+
+down_count_body
+	SUBV R8 R8 #1
+	PRESENT R8 down_count_init
+	SSVOP R8
+	LDR R10 #64
+
+timer2_outer
+	SUBV R10 R10 #1
+	PRESENT R10 down_count_body
+	LDR R11 #65535
+
+timer2_inner
+	SUBV R11 R11 #1
+	PRESENT R11 timer2_outer
+	JMP timer2_inner
 
 ENDPROG
