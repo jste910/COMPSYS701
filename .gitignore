@@ -2,7 +2,6 @@
 *
 
 # Keep the folders for submissions
-!assembler/Assembler/**
 !DE1-FPGA/
 !DE1-FPGA/**
 
@@ -20,8 +19,7 @@
 !README_ASSEMBLER.md
 # Include assembler folder and all its contents
 !assembler/
-!assembler/ReCOP-ASM Package/
-!assembler/ReCOP-ASM Package/**
+!assembler/**
 
 # Include vhdl-src folder
 !vhdl-src/
