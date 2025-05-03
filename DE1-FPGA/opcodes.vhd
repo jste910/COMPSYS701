@@ -58,6 +58,7 @@ package opcodes is
    constant ceot: bit_6 := "111110";
    constant seot: bit_6 := "111111";
    constant noop: bit_6 := "110100";
+   constant halt: bit_6 := "000110";
    
 -- operations with immediate AM
    -- SZ Op

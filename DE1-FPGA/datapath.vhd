@@ -2,8 +2,8 @@
 
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
-USE ieee.std_logic_unsigned.ALL;
-USE ieee.std_logic_arith.ALL;
+--USE ieee.std_logic_unsigned.ALL;
+--USE ieee.std_logic_arith.ALL;
 
 USE IEEE.numeric_std.ALL;
 
@@ -19,8 +19,9 @@ ENTITY datapath IS
 		HEX0 : OUT STD_LOGIC_VECTOR(6 DOWNTO 0);
 		HEX1 : OUT STD_LOGIC_VECTOR(6 DOWNTO 0);
 		HEX2 : OUT STD_LOGIC_VECTOR(6 DOWNTO 0);
-		HEX3 : OUT STD_LOGIC_VECTOR(6 DOWNTO 0)
-		
+		HEX3 : OUT STD_LOGIC_VECTOR(6 DOWNTO 0);
+        HEX4 : OUT STD_LOGIC_VECTOR(6 DOWNTO 0);
+		HEX5 : OUT STD_LOGIC_VECTOR(6 DOWNTO 0)
 	);
 END ENTITY datapath;
 
@@ -216,6 +217,7 @@ ARCHITECTURE behavior OF datapath IS
 
     -- OVERALL SIGNALS
     SIGNAL PROCESSOR_CLK : STD_LOGIC;
+    SIGNAL PLL_CLK : STD_LOGIC;
     SIGNAL RESET : STD_LOGIC;
 
     -- DATA SIGNALS
@@ -248,6 +250,7 @@ ARCHITECTURE behavior OF datapath IS
     SIGNAL IM_STORE : STD_LOGIC;
     SIGNAL PROGRAM_SELECT : STD_LOGIC_VECTOR(1 DOWNTO 0);
     SIGNAL PROGRAM_SET : STD_LOGIC;
+    SIGNAL COMPARE_OUTPUT : STD_LOGIC;
 
     -- REGISTER CONTROL SIGNALS
     SIGNAL SVOP_SET : STD_LOGIC;
@@ -258,14 +261,10 @@ ARCHITECTURE behavior OF datapath IS
     SIGNAL REGISTER_SELECT : STD_LOGIC_VECTOR(2 DOWNTO 0) := "000";
     SIGNAL REGISTER_STORE : STD_LOGIC;
 
-    -- OTHER CONTROL SIGNALS    
-    SIGNAL COMPARE_OUTPUT : STD_LOGIC;
-
     -- DP SIGNALS
     SIGNAL DPCR_WRITE : STD_LOGIC;
     SIGNAL DPCR_SELECT : STD_LOGIC;
     SIGNAL DPCR_CLEAR : STD_LOGIC;
-	
     SIGNAL DPRR : STD_LOGIC_VECTOR(1 DOWNTO 0);
     SIGNAL DPRR_WRITE : STD_LOGIC;
     SIGNAL DPRR_IRQ_CLEAR : STD_LOGIC;
@@ -433,7 +432,7 @@ BEGIN
         dpcr_wr => DPCR_WRITE,
         -- ER
         er => ER,
-        er_wr => NOT KEY(1), -- I dont get why ER has a write signal, I though it was event capture
+        er_wr => '0', 
         er_clr => ER_CLEAR,
         -- EOT
         eot => OPEN, -- no clue where to pipe this
@@ -474,11 +473,11 @@ BEGIN
     PORT MAP
     (
         inclk0 => CLOCK_50,
-        c0 => PROCESSOR_CLK
+        c0 => PLL_CLK
     );
 	
 	 
-	 process(SVOP)
+	process(SVOP)
 		begin
         -- Map to 7-segment display
         HEX3 <= hex_to_7seg(SVOP(15 downto 12));
@@ -486,9 +485,26 @@ BEGIN
         HEX1 <= hex_to_7seg(SVOP(7 downto 4));
         HEX0 <= hex_to_7seg(SVOP(3 downto 0));
     end process;
+
+    -- Show what instruction the cpu is on.
+    process(PROGRAM_COUNTER, SW(9))
+        begin
+            IF SW(9) = '1' THEN
+                HEX4 <= hex_to_7seg(PROGRAM_COUNTER(3 downto 0));
+                HEX5 <= hex_to_7seg(PROGRAM_COUNTER(7 downto 4));
+            ELSE
+                HEX4 <= "1111111";
+                HEX5 <= "1111111";
+            END IF;
+    end process;
+
+    -- Switch the clock to the button input
+    -- Does some wack stuff when switching between the two inputs. I have no clue why it does this TBH.
+    PROCESSOR_CLK <= NOT KEY(1) WHEN SW(8) = '1' ELSE PLL_CLK;
 	 
-	 RESET <= NOT KEY(0);
-	 LEDR <= T_LEDR(9 DOWNTO 0);
-	 T_SW <= "000000" & SW;
+	RESET <= NOT KEY(0);
+	LEDR <= T_LEDR(9 DOWNTO 0);
+	T_SW <= X"00" & SW(7 DOWNTO 0);
+
 
 END behavior;

@@ -150,11 +150,13 @@ BEGIN
                         WHEN OTHERS =>
                             NULL;
                     END CASE;
-
-                    IF (AM = am_inherent) THEN
-                        FSM_STATE <= "001"; -- Inhearent instruction is finished
+                    
+                    IF (OP_Code = halt) THEN
+                        FSM_STATE <= "111"; -- Inhearent instruction is finished
                     ELSIF (OP_Code = ler OR OP_Code = lsip) THEN
                         FSM_STATE <= "001"; -- Simp Register write finished
+                    ELSIF (AM = am_inherent) THEN
+                        FSM_STATE <= "001"; -- go to a state that has no exit
                     ELSE
                         FSM_STATE <= "011"; -- Go to Execute / Mem
                     END IF;
