@@ -50,6 +50,6 @@ szjmp
     NOOP                ; Do nothing
     MAX R4 #99          ; Max compare with 99
     STRPC $300          ; Store PC to memory
-    HALT
+
 ENDPROG
 END

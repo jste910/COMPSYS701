@@ -1,9 +1,6 @@
-filePath = "assembler/ReCOP-ASM Package/"
-# f = filePath + "test3.asm"
-f = filePath + "test3.asm"
-
-
-
+import subprocess
+import argparse
+import os
 
 def binToHex(b): # b probably is a string
     bLookup = {'0000': '0', '0001': '1', '0010': '2', '0011': '3', '0100': '4', '0101': '5', '0110': '6', '0111': '7', '1000': '8', '1001': '9', '1010': 'A', '1011': 'B', '1100': 'C', '1101': 'D', '1110': 'E', '1111': 'F'}
@@ -23,6 +20,7 @@ def hextobin(hx): # hex is a string
     for c in hx:
         b += bin(int(c, 16))[2:].zfill(4) # convert to binary and pad with 0s
     return b
+
 def dectobin(dec):
     # convert decimal to binary with a padding so it is always a multiple of 4
     binary = f"{dec:b}"
@@ -33,27 +31,20 @@ def modifyParts(parts, lookup):
     bLookup = {"0" : "0000","1" : "0001","2" : "0010","3" : "0011","4" : "0100","5" : "0101","6" : "0110","7" : "0111","8" : "1000","9" : "1001","10" : "1010","11" : "1011","12" : "1100","13" : "1101","14" : "1110","15" : "1111"} # dec to bin
     instruction = "X"
     address = "XX"
-    returnType = "X" # return type
-    returnString = "" # return string
     rString = ""
     # find the last
     p = parts[-1]
     if p[0] == "R": # Register
         address = "11"
-        returnType = "RE"
     elif p[0] == "#": # Immediate
         address = "01"
-        returnType = "IM"
     elif p[0] == "$": # Direct
         address = "10"
-        returnType = "DI"
     elif p in ['CLFZ', "CER", "CEOT", "SEOT", 'NOOP']: # Inherent
         address = "00"
-        returnType = "IH"
     else:
         if p in lookup: # Lookup table
             address = "01" # Immediate (idk)
-            returnType = "IM"
         else:
             address = "XX"
 
@@ -179,13 +170,41 @@ def modifyParts(parts, lookup):
     ai = binToHex(address + instruction) + binToHex(rString)
 
     print(parts, ai)
-    return returnType, ai
+    return ai
 
 def main():
 
+    parser = argparse.ArgumentParser(description = "Beta's Assembler")
+    parser.add_argument("-f", "--inputfile", help = "Input file, use r/ for root directory (./COMPSYS701)", type = str, default = "X")
+    parser.add_argument("-o", "--outputfile", help = "Output file, use r/ for root directory (./COMPSYS701)", type = str, default = "X") # in case we can manipulate it
+    parser.add_argument("--keepHex", help = "Enable this option to keep the hex file", action="store_true") # keep the hex file
+    parser.add_argument("--noverify", help = "Enable this option to explicitly skip the verification stage", action="store_true") # keep the hex file
+    args = parser.parse_args()
+
+    inputfile = args.inputfile
+    outputfile = args.outputfile
+    keepHex = args.keepHex # keep the hex file
+    noverify = args.noverify # keep the hex file
+    root = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "COMPSYS701")) # get the root directory
+
+    if inputfile == "X":
+        print("Error: No input file specified")
+        return
+
+    if inputfile[:2] == "r/":
+        inputfile = os.path.join(root, inputfile[2:])
+    if outputfile[:2] == "r/":
+        outputfile = os.path.join(root, outputfile[2:])
+    if outputfile == "X": # didn't specify an output file, we will use the input file name
+        outputfile = os.path.join(os.path.dirname(inputfile), os.path.basename(inputfile)[:-4] + ".mif")
+    if not os.path.exists(inputfile):
+        print(f"Error: Input file {inputfile} does not exist")
+        return
+    
+    print("=============== First Pass ===============")
     lookup = {}
     finallines = []
-    with open(f, "r") as file:
+    with open(inputfile, "r") as file:
         lines = file.readlines()
         idx = 0
         for line in (lines):
@@ -204,17 +223,15 @@ def main():
             idx+= 1
 
     print(f"Lookup table: {lookup}")
+    print("=============== Second Pass ===============")
     o = []
     for line in finallines: # second pass
         parts = line.strip().split()
-        _, output = modifyParts(parts, lookup)
-
+        output = modifyParts(parts, lookup)
         o.append(output)
-    
-    o.append("01")
-    o.append("11111")
+
     # writing the .mif file
-    with open(f"{f[:-4]}.mif", "w") as file:
+    with open(f"{outputfile}", "w") as file:
         file.write("WIDTH = 16;\n")
         file.write("DEPTH = 1024;\n\n") # double newline
         file.write("ADDRESS_RADIX = HEX;\n")
@@ -226,12 +243,15 @@ def main():
             if len(o[i]) == 4:
                 # we have a 4 bit instruction, we need to add the address
                 file.write(f"\t\t{c:X}\t:{o[i]};\n")
-            else:
+            elif len(o[i]) == 8:
                 # we have a 8 bit instruction
                 file.write(f"\t\t{c:X}\t:{o[i][:4]};\n")
                 c += 1
                 # we need to add the next part
                 file.write(f"\t\t{c:X}\t:{o[i][4:]};\n")
+            else:
+                # issue
+                print(f"Error: {o[i]} is not a valid instruction.... Skipping...")
             c += 1
 
         if o[-1] != "0600":
@@ -239,14 +259,55 @@ def main():
             file.write(f"\t\t{c:X}\t:0600;\n")
 
         file.write("\tEND;\n")
-    # we write a comparator to check the output
-    f1 = filePath + "rawOutput.mif"
-    # f1 = "DE1-FPGA\\program.mif"
-    f2 = f[:-4] + ".mif"
-    print(f"Comparing {f1} and {f2}")
+    # end of .mif write
 
-    fileright = open(f1, "r")
-    filecheck = open(f2, "r")
+    if noverify:
+        print("No verification, skipping mrasm")
+        return
+
+    print("===============MR ASM ===============")
+    # run mrasm to check the output
+    print(f"Running mrasm on {inputfile} with {root}")
+    exe = os.path.join(root, "assembler\\mrasm.exe ")
+    mrasmcall = exe + args.inputfile.strip().split("/")[-1] # get the path to the file
+    # we can add the output file to match
+    print(f"Running: {mrasmcall}")
+    s = subprocess.run(mrasmcall, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, text=True)
+    assembleroutput = open("assemblerOutput.txt", "w")
+    assembleroutput.write(s.stdout) # write the output to a file
+    assembleroutput.close()
+    print("File Written to assemblerOutput.txt")
+
+    found = False
+    with open("assemblerOutput.txt", "r") as file:
+        lines = file.readlines()
+        for line in lines:
+            if "  Assembly process complete             |" in line:
+                found = True
+                break
+
+    if found:
+        print("MrASM Assembly process complete")
+    else:
+        print("MrASM Assembly process failed")
+        return
+
+    print("=====================================")
+    # because mrasm is junk we need to remove other files that it outputs
+    rmlist = [".txt", "debug.lines", "out.txt", "LUT", "mrasm.exe.stackdump"]
+    pth = (root + "\\assembler\\")
+    for i in rmlist:
+        if os.path.exists(pth + i):
+            os.remove(i) # remove the file
+    if not keepHex:
+        if os.path.exists(pth + "rawOutput.hex"):
+            os.remove(pth + "rawOutput.hex")
+    mrasmoutput = os.path.join(pth, "rawOutput.mif")
+
+    print(f"Comparing {mrasmoutput} and {outputfile}")
+
+    fileright = open(mrasmoutput, "r")
+    filecheck = open(outputfile, "r")
 
     filerightlines = fileright.readlines()
     filechecklines = filecheck.readlines()
@@ -254,6 +315,7 @@ def main():
     filecheck.close()
     error_lines = 0
     warning_lines = 0
+    
     for i in range(len(filerightlines)):
         if filerightlines[i] != filechecklines[i]:
             # check the previous instruction
@@ -264,7 +326,10 @@ def main():
                     print("[WARNING]: Instruction involves a keyword, outputs may differ:", end = " ")
                     warning_lines += 1
                 elif filerightlines[0:2] == 68: # false datacall
-                    print("[WARNING]: MrASM has an incorrect datacall function", end = " ")
+                    print("[WARNING]: MrASM has an incorrect datacall function:", end = " ")
+                    warning_lines += 1
+                elif filerightlines[i] == "\tEND;\n":
+                    print("[WARNING]: End of program was manually inserted:", end = " ")
                     warning_lines += 1
             else:
                 error_lines += 1
@@ -272,10 +337,8 @@ def main():
             print(f" Got: {filechecklines[i].strip()}", end = "")
             print()
     # summary
-    print(f"Total: {len(filerightlines)}")
-    print(f"Error: {error_lines}")
-    print(f"Warning: {warning_lines}")
+    print(f"Errors: {error_lines}")
+    print(f"Warnings: {warning_lines}")
 
-
-
-main()
+if __name__ == "__main__":
+    main()
