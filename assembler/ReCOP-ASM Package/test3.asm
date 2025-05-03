@@ -8,7 +8,7 @@ up_count_init
 	LSIP R3
 	PRESENT R3 up_count_body
 	OR R2 R3 #0
-
+	HALT
 up_count_body
 	SUBV R2 R2 #1
 	PRESENT R2 up_count_init

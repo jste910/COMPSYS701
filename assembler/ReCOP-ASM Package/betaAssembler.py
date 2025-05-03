@@ -1,3 +1,9 @@
+filePath = "assembler/ReCOP-ASM Package/"
+# f = filePath + "test3.asm"
+f = filePath + "test3.asm"
+
+
+
 
 def binToHex(b): # b probably is a string
     bLookup = {'0000': '0', '0001': '1', '0010': '2', '0011': '3', '0100': '4', '0101': '5', '0110': '6', '0111': '7', '1000': '8', '1001': '9', '1010': 'A', '1011': 'B', '1100': 'C', '1101': 'D', '1110': 'E', '1111': 'F'}
@@ -164,6 +170,10 @@ def modifyParts(parts, lookup):
     if parts[0] == "STRPC":
         instruction = "011101"
         rString = hextobin(parts[-1][1:]).rjust(24, "0")
+    if parts[0] == "HALT":
+        address = "00"
+        instruction = "000110"
+        rString = "00000000"
 
     # get the hex equivalent of the binary string
     ai = binToHex(address + instruction) + binToHex(rString)
@@ -171,84 +181,101 @@ def modifyParts(parts, lookup):
     print(parts, ai)
     return returnType, ai
 
-filePath = "assembler/ReCOP-ASM Package/"
-# f = filePath + "gpt.asm"
-f = filePath + "test3.asm"
+def main():
 
+    lookup = {}
+    finallines = []
+    with open(f, "r") as file:
+        lines = file.readlines()
+        idx = 0
+        for line in (lines):
+            # we need to filter out the commends, empty lines and tabs or spaces
+            l = line.strip()
+            if l == "" or l[0] == ";" or l == "ENDPROG" or l == "END": # I hope l == "\n" is not needed
+                continue # we don't care about endprog
+            if l.count(";") > 0: # if there is a comment, we need to remove it
+                l = l.split(";")[0] # remove the comment
+            # if the line has a lowecase first letter, add it to the lookup table
+            if l[0].islower():
+                lookup[f"{l}"] = idx
+                continue
+            print(f"Line {idx} : {l}")
+            finallines.append(l) # add to the next pass
+            idx+= 1
 
-lookup = {}
-finallines = []
-with open(f, "r") as file:
-    lines = file.readlines()
-    idx = 0
-    for line in (lines):
-        # we need to filter out the commends, empty lines and tabs or spaces
-        l = line.strip()
-        if l == "" or l[0] == ";" or l == "ENDPROG" or l == "END": # I hope l == "\n" is not needed
-            continue # we don't care about endprog
-        if l.count(";") > 0: # if there is a comment, we need to remove it
-            l = l.split(";")[0] # remove the comment
-        # if the line has a lowecase first letter, add it to the lookup table
-        if l[0].islower():
-            lookup[f"{l}"] = idx
-            continue
-        print(f"Line {idx} : {l}")
-        finallines.append(l) # add to the next pass
-        idx+= 1
+    print(f"Lookup table: {lookup}")
+    o = []
+    for line in finallines: # second pass
+        parts = line.strip().split()
+        _, output = modifyParts(parts, lookup)
 
-print(f"Lookup table: {lookup}")
-o = []
-tList = [] # type list
-for line in finallines: # second pass
-    parts = line.strip().split()
-    tpe, output = modifyParts(parts, lookup)
-
-    # print(f"{parts} -> {output} || {len(output)} bits")
-    o.append(output)
-    tList.append(tpe) # add to the type list
-
-
-
-# writing the .mif file
-with open(f"{f[:-4]}.mif", "w") as file:
-    file.write("WIDTH = 16;\n")
-    file.write("DEPTH = 1024;\n\n") # double newline
-    file.write("ADDRESS_RADIX = HEX;\n")
-    file.write("DATA_RADIX = HEX;\n\n") # double newline
-    file.write("CONTENT\n\tBEGIN\n")
-    file.write("\t\t[00..3FF]: FFFF;\n")
-    c = 0
-    for i in range(len(finallines)):
-        if len(o[i]) == 4:
-            # we have a 4 bit instruction, we need to add the address
-            file.write(f"\t\t{c:X}\t:{o[i]};\n")
-        else:
-            # we have a 8 bit instruction
-            file.write(f"\t\t{c:X}\t:{o[i][:4]};\n")
+        o.append(output)
+    
+    o.append("01")
+    o.append("11111")
+    # writing the .mif file
+    with open(f"{f[:-4]}.mif", "w") as file:
+        file.write("WIDTH = 16;\n")
+        file.write("DEPTH = 1024;\n\n") # double newline
+        file.write("ADDRESS_RADIX = HEX;\n")
+        file.write("DATA_RADIX = HEX;\n\n") # double newline
+        file.write("CONTENT\n\tBEGIN\n")
+        file.write("\t\t[00..3FF]: FFFF;\n")
+        c = 0
+        for i in range(len(finallines)):
+            if len(o[i]) == 4:
+                # we have a 4 bit instruction, we need to add the address
+                file.write(f"\t\t{c:X}\t:{o[i]};\n")
+            else:
+                # we have a 8 bit instruction
+                file.write(f"\t\t{c:X}\t:{o[i][:4]};\n")
+                c += 1
+                # we need to add the next part
+                file.write(f"\t\t{c:X}\t:{o[i][4:]};\n")
             c += 1
-            # we need to add the next part
-            file.write(f"\t\t{c:X}\t:{o[i][4:]};\n")
-        c += 1
 
-    file.write("\tEND;\n")
+        if o[-1] != "0600":
+            # we need to add the last part
+            file.write(f"\t\t{c:X}\t:0600;\n")
+
+        file.write("\tEND;\n")
+    # we write a comparator to check the output
+    f1 = filePath + "rawOutput.mif"
+    # f1 = "DE1-FPGA\\program.mif"
+    f2 = f[:-4] + ".mif"
+    print(f"Comparing {f1} and {f2}")
+
+    fileright = open(f1, "r")
+    filecheck = open(f2, "r")
+
+    filerightlines = fileright.readlines()
+    filechecklines = filecheck.readlines()
+    fileright.close()
+    filecheck.close()
+    error_lines = 0
+    warning_lines = 0
+    for i in range(len(filerightlines)):
+        if filerightlines[i] != filechecklines[i]:
+            # check the previous instruction
+            if i>0: # make sure we don't negative index
+                instruction = filechecklines[i-1].strip().split(":")[1][0:2]
+                if instruction == "54" or instruction == "5C" or instruction == "58":
+                    # if it is one of these it is a jump instruction
+                    print("[WARNING]: Instruction involves a keyword, outputs may differ:", end = " ")
+                    warning_lines += 1
+                elif filerightlines[0:2] == 68: # false datacall
+                    print("[WARNING]: MrASM has an incorrect datacall function", end = " ")
+                    warning_lines += 1
+            else:
+                error_lines += 1
+            print(f"Expected: {filerightlines[i].strip()}", end = "")
+            print(f" Got: {filechecklines[i].strip()}", end = "")
+            print()
+    # summary
+    print(f"Total: {len(filerightlines)}")
+    print(f"Error: {error_lines}")
+    print(f"Warning: {warning_lines}")
 
 
-# we write a comparator to check the output
-# f1 = filePath + "rawOutput.mif"
-f1 = "DE1-FPGA\program.mif"
-f2 = f[:-4] + ".mif"
-print(f"Comparing {f1} and {f2}")
 
-fileright = open(f1, "r")
-filecheck = open(f2, "r")
-
-filerightlines = fileright.readlines()
-filechecklines = filecheck.readlines()
-fileright.close()
-filecheck.close()
-
-for i in range(len(filerightlines)):
-    if filerightlines[i] != filechecklines[i]:
-        print(f"Index: |{i} Expected: {filerightlines[i]}|", end = " ")
-        print(f"Got: |{filechecklines[i]}|")
-
+main()
