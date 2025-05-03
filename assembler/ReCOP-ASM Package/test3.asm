@@ -3,16 +3,19 @@ start
 
 up_count_init
 	CER
+	LDR R0 #1
 	LDR R1 #0
 	LDR R2 #16
 	LSIP R3
 	PRESENT R3 up_count_body
 	OR R2 R3 #0
-	HALT
+
 up_count_body
 	SUBV R2 R2 #1
 	PRESENT R2 up_count_init
 	SSVOP R1
+	DATACALL R1 #0
+	PRESENT R0 down_count_init
 	ADD R1 R1 #1
 	LDR R4 #64
 
@@ -28,6 +31,7 @@ timer1_inner
 
 down_count_init
 	CER
+	LDR R0 #1
 	LDR R8 #23
 	LSIP R9
 	PRESENT R9 down_count_body
@@ -37,6 +41,8 @@ down_count_body
 	SUBV R8 R8 #1
 	PRESENT R8 down_count_init
 	SSVOP R8
+	DATACALL R8 #0
+	PRESENT R0 up_count_init
 	LDR R10 #64
 
 timer2_outer
