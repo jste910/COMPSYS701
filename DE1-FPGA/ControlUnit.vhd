@@ -17,6 +17,7 @@ ENTITY ControlUnit IS
         OP_Code : IN STD_LOGIC_VECTOR(5 DOWNTO 0);
         AM : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
         Z_Flag : IN STD_LOGIC;
+        DPRR_IRQ : IN STD_LOGIC; 
 
         -- OUTPUTS DATA FLOW
         Address_Select : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
@@ -25,7 +26,6 @@ ENTITY ControlUnit IS
         ALU_Select_2 : OUT STD_LOGIC;
         Reg_Select : OUT STD_LOGIC_VECTOR(2 DOWNTO 0);
         PC_Select : OUT STD_LOGIC_VECTOR(1 DOWNTO 0);
-        DPCR_Select : OUT STD_LOGIC;
 
         -- OUTPUTS MIAN CONTROL
         PC_Store : OUT STD_LOGIC;
@@ -37,7 +37,7 @@ ENTITY ControlUnit IS
         DM_STORE : OUT STD_LOGIC;
 
         -- OUTPUTS IO / REG CONTROL
-        DPCR_Store : OUT STD_LOGIC;
+        
         Z_Clear : OUT STD_LOGIC;
         ER_Clear : OUT STD_LOGIC;
         EOT_Clear : OUT STD_LOGIC;
@@ -45,13 +45,20 @@ ENTITY ControlUnit IS
         SVOP_Set : OUT STD_LOGIC;
         SOP_Set : OUT STD_LOGIC;
 
-        -- DEBUG UTIL
-        STATE : OUT STD_LOGIC_VECTOR(2 DOWNTO 0)
+        -- DP SIGNALS
+        DPCR_Store : OUT STD_LOGIC;
+        DPCR_Select : OUT STD_LOGIC;
+        DPCR_Clear : OUT STD_LOGIC;
+        DPRR_Write : OUT STD_LOGIC;
+        DPRR_IRQ_Clear : OUT STD_LOGIC;
+        DPRR_RES_Write : OUT STD_LOGIC
+
     );
 END ENTITY ControlUnit;
 
 ARCHITECTURE behavior OF ControlUnit IS
     SIGNAL FSM_STATE : STD_LOGIC_VECTOR(2 DOWNTO 0) := "000";
+    SIGNAL DPRR_IRQ_EN : STD_LOGIC := '0';
 BEGIN
     PROCESS (CLK, Reset)
     BEGIN
@@ -65,8 +72,7 @@ BEGIN
             ALU_Select_2 <= '0';
             Reg_Select <= "000";
             PC_Select <= "00";
-            DPCR_Select <= '0';
-
+            
             PC_Store <= '0';
             IM_Store <= '0';
             IR_Load <= '0';
@@ -75,13 +81,17 @@ BEGIN
             
             DM_LOAD <= '0';
             DM_STORE <= '0';
-            DPCR_Store <= '0';
             Z_Clear <= '0';
             ER_Clear <= '0';
             EOT_Clear <= '0';
             EOT_Set <= '0';
             SVOP_Set <= '0';
             SOP_Set <= '0';
+
+            DPCR_Store <= '0';
+            DPCR_Select <= '0';
+            DPRR_Write <= '0';
+            DPRR_IRQ_Clear <= '0';
 
             CASE FSM_STATE IS
                 WHEN "000" =>
@@ -96,7 +106,11 @@ BEGIN
                     PC_Select <= "00";
                     PC_Store <= '1';
                     
-                    FSM_STATE <= "010"; -- Move to decode
+                    IF (DPRR_IRQ = '1') AND (DPRR_IRQ_EN = '1') THEN
+                        FSM_STATE <= "101"; -- Handle Datacall interupt
+                    ELSE
+                        FSM_STATE <= "010"; -- Go intrustion Decode
+                    END IF;
 
                 WHEN "010" =>
                     -- Instruction Decode / Register Access
@@ -136,11 +150,13 @@ BEGIN
                         WHEN OTHERS =>
                             NULL;
                     END CASE;
-
-                    IF (AM = am_inherent) THEN
-                        FSM_STATE <= "001"; -- Inhearent instruction is finished
+                    
+                    IF (OP_Code = halt) THEN
+                        FSM_STATE <= "111"; -- Inhearent instruction is finished
                     ELSIF (OP_Code = ler OR OP_Code = lsip) THEN
                         FSM_STATE <= "001"; -- Simp Register write finished
+                    ELSIF (AM = am_inherent) THEN
+                        FSM_STATE <= "001"; -- go to a state that has no exit
                     ELSE
                         FSM_STATE <= "011"; -- Go to Execute / Mem
                     END IF;
@@ -236,12 +252,26 @@ BEGIN
                             FSM_STATE <= "100";
 
                         WHEN datacall =>
+                            -- Non Blocking
                             DPCR_Store <= '1';
-                            DPCR_Select <= '0';
+                            DPRR_RES_Write <= '1';
+                            DPRR_IRQ_EN <= '1';
+                            IF (AM = am_immediate) THEN
+                                DPCR_Select <= '1';
+                            ELSE
+                                DPCR_Select <= '0';
+                            END IF;
 
                         WHEN datacall2 =>
+                            -- Blocking
+                            -- IDK the the compliler even makes this code tbh
                             DPCR_Store <= '1';
                             DPCR_Select <= '1';
+                            DPRR_RES_Write <= '1';
+                            DPRR_IRQ_EN <= '1';
+                            -- goto blocking state
+                            -- Doesn't currently work
+                            --FSM_STATE <= "110";
 
                         WHEN sz =>
                             PC_Select <= "01";
@@ -318,10 +348,31 @@ BEGIN
 
                     FSM_STATE <= "001";
 
+                WHEN "101" =>
+                    -- DATACALL mini interupt
+                    DPCR_Clear <= '1';
+
+                    DPRR_Write <= '1';
+                    DPRR_IRQ_Clear <= '1';
+                    DPRR_RES_Write <= '0';
+                    DPRR_IRQ_EN <= '0';
+
+                    -- go back to the decode stage
+                    FSM_STATE <= "010";
+
+                WHEN "110" =>
+                    -- SPINLOCK for blocking datacalls
+                    -- Doesn't exit for some reason
+                    IF (DPRR_IRQ = '1') THEN
+                        FSM_STATE <= "101";
+                    ELSE
+                        FSM_STATE <= "110";
+                    END IF;
+                    
                 WHEN "111" =>
                     -- HALT
                     -- STOP RIGHT THERE CRIMINAL SCUM YOU HAVE VIOLATED THE LAW!
-                    NULL;
+                    FSM_STATE <= "111";
 
                 WHEN OTHERS =>
                     -- This shouldn't happen
@@ -329,5 +380,4 @@ BEGIN
             END CASE;
         END IF;
     END PROCESS;
-    STATE <= FSM_STATE;
 END behavior;

@@ -125,4 +125,4 @@ Processing -> Update Memory Initialization File
 
 ![alt text](media/image-7.png)
 
-Once that has been done, re-program the FPGA using the same method as  earlier
+Once that has been done, re-program the FPGA using the same method as mentioned earlier

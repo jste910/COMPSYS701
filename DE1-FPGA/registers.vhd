@@ -19,6 +19,7 @@ entity registers is
 		ir_operand : in bit_16;
 		dpcr_lsb_sel : in bit_1;
 		dpcr_wr : in bit_1;
+		dpcr_clr : in bit_1;
 		-- environment ready and set and clear signals
 		er: out bit_1 := '0';
 		er_wr : in bit_1;
@@ -63,6 +64,8 @@ architecture beh of registers is
 					dpcr <= rx&ir_operand;
 				when others =>
 				end case;
+			elsif dpcr_clr = '1' then
+				dpcr <= X"00000000";
 			end if;
 		end if;
 	end process;

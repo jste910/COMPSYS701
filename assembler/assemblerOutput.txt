@@ -1,0 +1,166 @@
+.----------------------------- ---- --
+| SystemJ ASSEMBLER v1.0(16-bit)  (c) 2008
+`----------------------------- -- ------.
+  Opened file: led.asm                  |
+                                        |
+  Starting first parse                  |
+This is the LABEL to be added start
+Found: LDR	1	15
+This is the LABEL to be added outer_loop_init
+Instruction Count: 3
+Found: LDR	2	100
+This is the LABEL to be added inner_loop_init
+Instruction Count: 8
+Found: LDR	3	20000
+This is the LABEL to be added inner_loop
+Instruction Count: B
+Found: SUBV	R3	R3	1
+		PRESENT	R3	$0000
+Instruction Count: 10
+Found: JMP	10
+60000000
+Instruction Count: 13
+This is the LABEL to be added continue_outer
+Instruction Count: 14
+Found: SUBV	R2	R2	1
+		PRESENT	R2	$0000
+Instruction Count: 19
+Found: JMP	7
+60000000
+Instruction Count: 1C
+This is the LABEL to be added outer_exit
+Instruction Count: 1D
+Found: SUBV	R1	R1	1
+		PRESENT	R1	$0000
+Instruction Count: 22
+Found: JMP	2
+60000000
+Instruction Count: 25
+This is the LABEL to be added reset
+Instruction Count: 26
+Found: LDR	1	15
+Found: JMP	2
+60000000
+Instruction Count: 2B
+  Finished first parse                  |
+  Starting second parse                 |
+This is the LABEL to be added start
+keyword already defined: start
+Found: LDR	1	15
+00000000
+This is the LABEL to be added outer_loop_init
+keyword already defined: outer_loop_init
+Instruction Count: 3
+D0000000
+E8000000
+EC000000
+Found: LDR	2	100
+00000000
+This is the LABEL to be added inner_loop_init
+keyword already defined: inner_loop_init
+Instruction Count: 8
+D0000000
+Found: LDR	3	20000
+00000000
+This is the LABEL to be added inner_loop
+keyword already defined: inner_loop
+Instruction Count: B
+D0000000
+Found: SUBV	R3	R3	1
+0C000000
+		PRESENT	R3	$0013
+70000000
+Instruction Count: 10
+D0000000
+Found: JMP	10
+60000000
+60000000
+Instruction Count: 13
+D0000000
+This is the LABEL to be added continue_outer
+keyword already defined: continue_outer
+Instruction Count: 14
+D0000000
+Found: SUBV	R2	R2	1
+0C000000
+		PRESENT	R2	$001c
+70000000
+Instruction Count: 19
+D0000000
+Found: JMP	7
+60000000
+60000000
+Instruction Count: 1C
+D0000000
+This is the LABEL to be added outer_exit
+keyword already defined: outer_exit
+Instruction Count: 1D
+D0000000
+Found: SUBV	R1	R1	1
+0C000000
+		PRESENT	R1	$0025
+70000000
+Instruction Count: 22
+D0000000
+Found: JMP	2
+60000000
+60000000
+Instruction Count: 25
+D0000000
+This is the LABEL to be added reset
+keyword already defined: reset
+Instruction Count: 26
+D0000000
+Found: LDR	1	15
+00000000
+Found: JMP	2
+60000000
+60000000
+Instruction Count: 2B
+D0000000
+  Finished second parse                 |
+                                        |
+  Label, macro, and symbol table:       |
+                                        |
+  LABEL 	       reset	  0025  |
+  LABEL 	  outer_exit	  001c  |
+  LABEL 	continue_outer	  0013  |
+  LABEL 	  inner_loop	  000a  |
+  LABEL 	inner_loop_init	  0007  |
+  LABEL 	outer_loop_init	  0002  |
+  LABEL 	       start	  0000  |
+                                        |
+Doing others
+  Generating output machine code        |
+instrCount: 1
+instrCount: 2
+instrCount: 3
+instrCount: 4
+instrCount: 6
+instrCount: 7
+instrCount: 9
+instrCount: A
+instrCount: C
+instrCount: E
+instrCount: F
+instrCount: 11
+instrCount: 12
+instrCount: 13
+instrCount: 15
+instrCount: 17
+instrCount: 18
+instrCount: 1A
+instrCount: 1B
+instrCount: 1C
+instrCount: 1E
+instrCount: 20
+instrCount: 21
+instrCount: 23
+instrCount: 24
+instrCount: 25
+instrCount: 27
+instrCount: 29
+instrCount: 2A
+  Assembly process complete             |
+                                        |
+  - --- --------------------------------'

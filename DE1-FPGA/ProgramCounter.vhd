@@ -9,6 +9,7 @@ ENTITY ProgramCounter IS
         PC_SEL         : IN  STD_LOGIC_VECTOR(1 DOWNTO 0);  -- Selector
         PC_SET         : IN  STD_LOGIC;                     -- Latch the value
         CLK            : IN  STD_LOGIC;                     -- Clock signal
+        RESET          : IN  STD_LOGIC;                     -- Reset signal
         PC             : OUT STD_LOGIC_VECTOR(15 DOWNTO 0)  -- 16-bit output
     );
 END ENTITY ProgramCounter;
@@ -16,9 +17,11 @@ END ENTITY ProgramCounter;
 ARCHITECTURE behavior OF ProgramCounter IS
     SIGNAL PC_SIG : STD_LOGIC_VECTOR(15 DOWNTO 0) := X"0000";
 BEGIN
-    PROCESS (CLK)
+    PROCESS (CLK, RESET)
     BEGIN
-        IF falling_edge(CLK) THEN
+        IF RESET = '1' THEN
+            PC_SIG <= X"0000";
+        ELSIF falling_edge(CLK) THEN
             IF PC_SET = '1' THEN
                 CASE PC_SEL IS
                     WHEN "00" => -- PC = PC + 2
